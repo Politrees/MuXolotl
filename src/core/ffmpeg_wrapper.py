@@ -385,17 +385,23 @@ class FFmpegWrapper:
             # Build test command (convert only 0.5 second)
             cmd = [
                 "ffmpeg",
-                "-v", "error",
-                "-i", input_file,
-                "-t", "0.5",  # Only 0.5 seconds
-                "-c", "copy",
-                "-f", output_format,
+                "-v",
+                "error",
+                "-i",
+                input_file,
+                "-t",
+                "0.5",  # Only 0.5 seconds
+                "-c",
+                "copy",
+                "-f",
+                output_format,
                 "-",  # Output to stdout (null output)
             ]
 
             # Run test
             result = subprocess.run(
                 cmd,
+                check=False,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE,
                 text=True,

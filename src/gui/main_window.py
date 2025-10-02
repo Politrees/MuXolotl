@@ -172,9 +172,10 @@ class MuXolotlApp:
 
         try:
             from core.gpu_detector import GPUDetector
+
             gpu = GPUDetector()
             gpu_status = gpu.get_gpu_summary()
-            
+
             gpu_label = ctk.CTkLabel(
                 center_frame,
                 text=str(gpu_status),

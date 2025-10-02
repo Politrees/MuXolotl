@@ -1,7 +1,6 @@
 """GPU detection and hardware acceleration for MuXolotl"""
 
 import platform
-import re
 import subprocess
 
 from utils.logger import get_logger
@@ -59,6 +58,7 @@ class GPUDetector:
             # Try wmic first (faster)
             result = subprocess.run(
                 ["wmic", "path", "win32_VideoController", "get", "name"],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -81,7 +81,7 @@ class GPUDetector:
                         self.gpu_info["amd_model"] = line.strip()
                         break
 
-            if "intel" in output and "hd" in output or "iris" in output or "arc" in output:
+            if ("intel" in output and "hd" in output) or "iris" in output or "arc" in output:
                 self.gpu_info["intel"] = True
                 for line in result.stdout.splitlines():
                     if "intel" in line.lower():
@@ -95,6 +95,7 @@ class GPUDetector:
             try:
                 result = subprocess.run(
                     ["dxdiag", "/t", "dxdiag_output.txt"],
+                    check=False,
                     capture_output=True,
                     timeout=10,
                 )
@@ -108,6 +109,7 @@ class GPUDetector:
             # Try lspci
             result = subprocess.run(
                 ["lspci"],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -140,6 +142,7 @@ class GPUDetector:
         try:
             result = subprocess.run(
                 ["system_profiler", "SPDisplaysDataType"],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -237,12 +240,14 @@ class GPUDetector:
 
     def has_hardware_encoding(self) -> bool:
         """Check if any hardware encoding is available"""
-        return any([
-            self.gpu_info["nvidia"],
-            self.gpu_info["amd"],
-            self.gpu_info["intel"],
-            self.gpu_info["apple"],
-        ])
+        return any(
+            [
+                self.gpu_info["nvidia"],
+                self.gpu_info["amd"],
+                self.gpu_info["intel"],
+                self.gpu_info["apple"],
+            ]
+        )
 
     def get_gpu_summary(self) -> str:
         """Get human-readable GPU summary"""
