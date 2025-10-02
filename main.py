@@ -23,9 +23,13 @@ def main():
         # Create and run application
         app = MuXolotlApp()
         app.run()
-    except Exception as e:
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Application terminated by user")
+        sys.exit(0)
+    except (ImportError, RuntimeError, OSError) as e:
         logger.error(f"Application error: {e}", exc_info=True)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

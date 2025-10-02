@@ -1,5 +1,4 @@
-"""GUI modules for MuXolotl - Modern redesign
-"""
+"""GUI modules for MuXolotl - Modern redesign"""
 
 from .about_window import AboutWindow
 from .audio_tab import AudioTab

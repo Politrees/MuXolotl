@@ -1,5 +1,4 @@
-"""Main application window for MuXolotl - Modern redesign
-"""
+"""Main application window for MuXolotl - Modern redesign"""
 
 import os
 import sys
@@ -37,20 +36,6 @@ COLORS = {
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-class ModernButton(ctk.CTkButton):
-    """Modern styled button with gradient effect"""
-
-    def __init__(self, master, **kwargs):
-        super().__init__(
-            master,
-            corner_radius=8,
-            border_width=0,
-            fg_color=COLORS["primary"],
-            hover_color=COLORS["primary_hover"],
-            font=ctk.CTkFont(size=13, weight="bold"),
-            height=40,
-            **kwargs,
-        )
 
 class MuXolotlApp:
     """Main application class with modern UI"""
@@ -92,7 +77,7 @@ class MuXolotlApp:
         try:
             # PyInstaller creates a temp folder and stores path in _MEIPASS
             base_path = sys._MEIPASS
-        except Exception:
+        except AttributeError:
             base_path = os.path.abspath(".")
 
         return os.path.join(base_path, relative_path)

@@ -1,5 +1,4 @@
-"""Modern Video conversion tab for MuXolotl - WITH SPEED PROFILES AND TOOLTIPS
-"""
+"""Modern Video conversion tab for MuXolotl - WITH SPEED PROFILES AND TOOLTIPS"""
 
 import os
 import threading
@@ -10,6 +9,7 @@ import customtkinter as ctk
 
 from core.format_detector import FormatDetector
 from core.video_converter import VideoConverter
+from core.audio_converter import AudioConverter
 from utils.logger import get_logger
 
 from .tooltip import TOOLTIPS, create_tooltip
@@ -30,6 +30,7 @@ COLORS = {
     "border": "#475569",
 }
 
+
 class VideoTab:
     """Modern Video conversion tab with hardware encoding"""
 
@@ -41,6 +42,12 @@ class VideoTab:
         self.detector = FormatDetector()
         self.input_file = None
         self.is_converting = False
+        
+        # Initialize all attribute variables
+        self.show_advanced = False
+        self.resolution_var = None
+        self.fps_var = None
+        self.video_bitrate_var = None
 
         # Get hardware encoder info
         self.encoder_info = self.converter.get_encoder_info()
@@ -50,7 +57,7 @@ class VideoTab:
         logger.debug("Detecting hardware acceleration...")
         try:
             self.working_hwaccels = self.detector.get_working_hwaccels()
-        except Exception as e:
+        except (AttributeError, OSError, RuntimeError) as e:
             logger.warning(f"Hardware acceleration detection failed: {e}")
             self.working_hwaccels = set()
 
@@ -439,7 +446,6 @@ class VideoTab:
             text_color=COLORS["text_primary"],
         ).pack(side="left")
 
-        self.show_advanced = False
         self.advanced_toggle_btn = ctk.CTkButton(
             advanced_header,
             text="▼ Show",
@@ -573,7 +579,6 @@ class VideoTab:
 
         else:  # video_to_audio
             # Update format options to audio formats
-            from core.audio_converter import AudioConverter
             audio_converter = AudioConverter()
             formats = audio_converter.get_supported_formats()
             default = self.config.get("audio.default_format", "mp3")
@@ -742,7 +747,7 @@ class VideoTab:
                         info_text = f"{info_text} | {mins}:{secs:02d}"
 
                 self.file_info_label.configure(text=info_text)
-            except:
+            except (OSError, IOError, KeyError, ValueError):
                 self.file_info_label.configure(text="")
         else:
             self.file_name_label.configure(text="No file selected")
@@ -842,7 +847,7 @@ class VideoTab:
             fps = None
             video_bitrate = "auto"
 
-            if self.show_advanced:
+            if self.show_advanced and self.resolution_var and self.fps_var and self.video_bitrate_var:
                 resolution_str = self.resolution_var.get()
                 if "Original" not in resolution_str:
                     resolution = resolution_str.split()[0]
@@ -902,7 +907,7 @@ class VideoTab:
                 self._update_status(0, "❌ Conversion failed")
                 messagebox.showerror("Error", "Conversion failed. Please check the log for details.")
 
-        except Exception as e:
+        except (OSError, IOError, ValueError, AttributeError) as e:
             if self.is_converting:
                 logger.error(f"Conversion error: {e}", exc_info=True)
                 self._update_status(0, f"❌ Error: {e!s}")

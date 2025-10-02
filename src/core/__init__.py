@@ -1,5 +1,4 @@
-"""Core modules for MuXolotl
-"""
+"""Core modules for MuXolotl"""
 
 from .audio_converter import AudioConverter
 from .ffmpeg_wrapper import FFmpegWrapper

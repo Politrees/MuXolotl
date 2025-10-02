@@ -1,5 +1,4 @@
-"""About window for MuXolotl
-"""
+"""About window for MuXolotl"""
 
 import os
 import sys
@@ -19,6 +18,7 @@ COLORS = {
     "text_secondary": "#94a3b8",
     "border": "#475569",
 }
+
 
 class AboutWindow(ctk.CTkToplevel):
     """About/Info window"""
@@ -50,7 +50,7 @@ class AboutWindow(ctk.CTkToplevel):
         """Get absolute path to resource"""
         try:
             base_path = sys._MEIPASS
-        except Exception:
+        except AttributeError:
             base_path = os.path.abspath(".")
         return os.path.join(base_path, relative_path)
 
@@ -209,7 +209,7 @@ class AboutWindow(ctk.CTkToplevel):
             ("⭐ Star on GitHub", "https://github.com/Politrees/MuXolotl/stargazers"),
         ]
 
-        for i, (text, url) in enumerate(links):
+        for text, url in links:
             btn = ctk.CTkButton(
                 links_grid,
                 text=text,

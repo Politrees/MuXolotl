@@ -1,5 +1,4 @@
-"""Video conversion module for MuXolotl - WITH HARDWARE ENCODING SUPPORT
-"""
+"""Video conversion module for MuXolotl - WITH HARDWARE ENCODING SUPPORT"""
 
 import os
 from collections.abc import Callable
@@ -11,6 +10,7 @@ from .ffmpeg_wrapper import FFmpegWrapper
 from .format_detector import FormatDetector
 
 logger = get_logger()
+
 
 class VideoConverter:
     """Handle video file conversions with hardware encoding support"""
@@ -70,7 +70,7 @@ class VideoConverter:
 
     def _detect_hardware_encoders(self) -> dict[str, str | None]:
         """Detect available hardware encoders
-        
+
         Returns:
             Dictionary mapping codec types to best available encoder
 
@@ -86,13 +86,13 @@ class VideoConverter:
 
         # H.264 encoders (priority order: best performance first)
         h264_priority = [
-            "h264_nvenc",        # NVIDIA (fastest, excellent quality)
-            "h264_qsv",          # Intel Quick Sync (very fast)
-            "h264_amf",          # AMD (fast)
-            "h264_videotoolbox", # macOS (fast)
-            "h264_vaapi",        # Linux VAAPI
-            "h264_v4l2m2m",      # Raspberry Pi
-            "libx264",            # CPU fallback (slower but universal)
+            "h264_nvenc",          # NVIDIA (fastest, excellent quality)
+            "h264_qsv",            # Intel Quick Sync (very fast)
+            "h264_amf",            # AMD (fast)
+            "h264_videotoolbox",   # macOS (fast)
+            "h264_vaapi",          # Linux VAAPI
+            "h264_v4l2m2m",        # Raspberry Pi
+            "libx264",             # CPU fallback (slower but universal)
         ]
 
         for encoder in h264_priority:
@@ -100,7 +100,8 @@ class VideoConverter:
                 # Test if encoder actually works
                 if self.detector.test_encoder(encoder):
                     encoders["h264"] = encoder
-                    if "nvenc" in encoder or "qsv" in encoder or "amf" in encoder:
+                    encoder_name = str(encoder)  # Ensure it's a string
+                    if "nvenc" in encoder_name or "qsv" in encoder_name or "amf" in encoder_name:
                         logger.info(f"🚀 Hardware H.264 encoder found: {encoder}")
                     else:
                         logger.debug(f"Using H.264 encoder: {encoder}")
@@ -120,7 +121,8 @@ class VideoConverter:
             if encoder in available_encoders:
                 if self.detector.test_encoder(encoder):
                     encoders["hevc"] = encoder
-                    if "nvenc" in encoder or "qsv" in encoder or "amf" in encoder:
+                    encoder_name = str(encoder)
+                    if "nvenc" in encoder_name or "qsv" in encoder_name or "amf" in encoder_name:
                         logger.info(f"🚀 Hardware HEVC encoder found: {encoder}")
                     break
 
@@ -159,7 +161,7 @@ class VideoConverter:
         info = []
 
         if self.hardware_encoders["h264"]:
-            encoder = self.hardware_encoders["h264"]
+            encoder = str(self.hardware_encoders["h264"])
             if "nvenc" in encoder:
                 info.append("H.264: NVIDIA GPU (Very Fast)")
             elif "qsv" in encoder:
@@ -172,7 +174,7 @@ class VideoConverter:
                 info.append("H.264: CPU (Slow)")
 
         if self.hardware_encoders["hevc"]:
-            encoder = self.hardware_encoders["hevc"]
+            encoder = str(self.hardware_encoders["hevc"])
             if "nvenc" in encoder or "qsv" in encoder or "amf" in encoder:
                 info.append("HEVC: Hardware Accelerated")
 
@@ -197,7 +199,7 @@ class VideoConverter:
         progress_callback: Callable[[float, str], None] | None = None,
     ) -> str | None:
         """Convert video file with hardware encoding support
-        
+
         Args:
             input_file: Path to input file
             output_dir: Directory for output file
@@ -214,7 +216,7 @@ class VideoConverter:
             preserve_metadata: Whether to preserve metadata
             tune: Tune parameter (e.g., 'fastdecode', 'zerolatency')
             progress_callback: Optional callback for progress updates
-            
+
         Returns:
             Path to output file or None if failed
 
@@ -306,7 +308,7 @@ class VideoConverter:
             logger.error(f"Conversion failed for: {input_file}")
             return None
 
-        except Exception as e:
+        except (OSError, IOError, ValueError) as e:
             logger.error(f"Video conversion error: {e}", exc_info=True)
             return None
 
@@ -321,7 +323,7 @@ class VideoConverter:
         progress_callback: Callable[[float, str], None] | None = None,
     ) -> str | None:
         """Extract audio from video file
-        
+
         Args:
             input_file: Path to input video file
             output_dir: Directory for output file
@@ -330,11 +332,13 @@ class VideoConverter:
             audio_bitrate: Audio bitrate
             sample_rate: Sample rate
             progress_callback: Optional callback for progress updates
-            
+
         Returns:
             Path to output file or None if failed
 
         """
+        from .audio_converter import AudioConverter
+
         try:
             if not os.path.exists(input_file):
                 logger.error(f"Input file not found: {input_file}")
@@ -348,12 +352,10 @@ class VideoConverter:
 
             # Determine codec
             if audio_codec == "auto":
-                from .audio_converter import AudioConverter
                 audio_conv = AudioConverter()
                 audio_codec = audio_conv._get_best_codec(output_format)
 
             # Audio format mapping
-            from .audio_converter import AudioConverter
             format_mapping = AudioConverter.FORMAT_MAPPING
 
             params = {
@@ -379,7 +381,7 @@ class VideoConverter:
             logger.error(f"Audio extraction failed for: {input_file}")
             return None
 
-        except Exception as e:
+        except (OSError, IOError, ImportError) as e:
             logger.error(f"Audio extraction error: {e}", exc_info=True)
             return None
 
@@ -390,15 +392,15 @@ class VideoConverter:
 
         return hwaccel in self.working_hwaccels
 
-    def _get_best_video_codec(self, format: str) -> str:
+    def _get_best_video_codec(self, fmt: str) -> str:
         """Get best available video codec for format (prefer hardware)"""
         # For MP4/MKV/AVI/MOV - try to use hardware H.264 encoder
-        if format in ["mp4", "mkv", "avi", "mov", "m4v", "ts", "m2ts"]:
+        if fmt in ["mp4", "mkv", "avi", "mov", "m4v", "ts", "m2ts"]:
             if self.hardware_encoders["h264"]:
                 return self.hardware_encoders["h264"]
 
         # For WebM - try VP9 hardware encoder
-        if format == "webm":
+        if fmt == "webm":
             if self.hardware_encoders["vp9"]:
                 return self.hardware_encoders["vp9"]
 
@@ -411,15 +413,15 @@ class VideoConverter:
             "mov": ["libx264"],
         }
 
-        for codec in fallback_map.get(format, ["libx264"]):
+        for codec in fallback_map.get(fmt, ["libx264"]):
             if codec in self.available_video_codecs:
                 return codec
 
         return "copy"
 
-    def _get_best_audio_codec(self, format: str) -> str:
+    def _get_best_audio_codec(self, fmt: str) -> str:
         """Get best available audio codec for format"""
-        recommended = self.AUDIO_CODEC_MAPPING.get(format)
+        recommended = self.AUDIO_CODEC_MAPPING.get(fmt)
         if recommended and recommended in self.available_audio_codecs:
             return recommended
 
@@ -431,7 +433,7 @@ class VideoConverter:
             "avi": ["libmp3lame", "mp3", "aac"],
         }
 
-        for codec in fallback_map.get(format, ["aac"]):
+        for codec in fallback_map.get(fmt, ["aac"]):
             if codec in self.available_audio_codecs:
                 return codec
 
@@ -455,8 +457,10 @@ class VideoConverter:
     def get_supported_formats(self) -> list:
         """Get list of supported video formats"""
         available = self.detector.get_video_formats()
-        return sorted([fmt for fmt in self.FORMAT_MAPPING.keys()
-                      if self.FORMAT_MAPPING[fmt] in available or fmt in available])
+        return sorted([
+            fmt for fmt in self.FORMAT_MAPPING
+            if self.FORMAT_MAPPING[fmt] in available or fmt in available
+        ])
 
     def get_file_info(self, file_path: str) -> dict[str, any]:
         """Get video file information"""

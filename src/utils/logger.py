@@ -1,5 +1,4 @@
-"""Logging utilities for MuXolotl
-"""
+"""Logging utilities for MuXolotl"""
 
 import logging
 import os
@@ -8,11 +7,11 @@ from datetime import datetime
 
 def setup_logger(name="MuXolotl", level=logging.INFO):
     """Setup application logger
-    
+
     Args:
         name: Logger name
         level: Logging level
-        
+
     Returns:
         Logger instance
 
@@ -48,6 +47,7 @@ def setup_logger(name="MuXolotl", level=logging.INFO):
     logger.addHandler(file_handler)
 
     return logger
+
 
 def get_logger(name="MuXolotl"):
     """Get existing logger instance"""

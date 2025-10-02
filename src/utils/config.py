@@ -1,5 +1,4 @@
-"""Configuration management for MuXolotl
-"""
+"""Configuration management for MuXolotl"""
 
 import json
 import os
@@ -49,7 +48,7 @@ class Config:
                     loaded = json.load(f)
                     # Merge with defaults
                     return self._merge_configs(self.DEFAULT_CONFIG.copy(), loaded)
-            except Exception:
+            except (json.JSONDecodeError, IOError, OSError):
                 pass
         return self.DEFAULT_CONFIG.copy()
 
@@ -67,16 +66,16 @@ class Config:
         try:
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(self.config, f, indent=2, ensure_ascii=False)
-        except Exception as e:
+        except (IOError, OSError, PermissionError) as e:
             print(f"Failed to save config: {e}")
 
     def get(self, key_path, default=None):
         """Get configuration value by path
-        
+
         Args:
             key_path: Dot-separated path (e.g., "audio.default_format")
             default: Default value if not found
-            
+
         Returns:
             Configuration value
 
@@ -92,7 +91,7 @@ class Config:
 
     def set(self, key_path, value):
         """Set configuration value by path
-        
+
         Args:
             key_path: Dot-separated path
             value: Value to set

@@ -1,7 +1,7 @@
-"""Modern Audio conversion tab for MuXolotl
-"""
+"""Modern Audio conversion tab for MuXolotl"""
 
 import os
+import re
 import threading
 from pathlib import Path
 from tkinter import filedialog, messagebox
@@ -29,6 +29,7 @@ COLORS = {
     "text_secondary": "#94a3b8",
     "border": "#475569",
 }
+
 
 class AudioTab:
     """Modern Audio conversion tab"""
@@ -342,7 +343,7 @@ class AudioTab:
             widget.dnd_bind("<<Drop>>", self._on_drop_dnd2)
             logger.debug("Drag & drop enabled (tkinterdnd2)")
             return
-        except:
+        except (ImportError, AttributeError):
             pass
 
         try:
@@ -355,7 +356,7 @@ class AudioTab:
             widget.bind("<Drop>", handle_drop)
             logger.debug("Drag & drop enabled (Windows)")
             return
-        except:
+        except (ImportError, AttributeError):
             pass
 
         logger.debug("Drag & drop not available")
@@ -365,7 +366,7 @@ class AudioTab:
         try:
             files = self._parse_drop_data(event.data)
             self._process_dropped_files(files)
-        except Exception as e:
+        except (AttributeError, ValueError) as e:
             logger.error(f"Drag and drop error: {e}")
 
     def _parse_drop_data(self, data):
@@ -377,7 +378,6 @@ class AudioTab:
 
         # Method 1: Parse Windows style {path1} {path2}
         if "{" in data:
-            import re
             matches = re.findall(r"\{([^}]+)\}", data)
             files.extend(matches)
 
@@ -398,8 +398,8 @@ class AudioTab:
     def _process_dropped_files(self, files):
         """Process dropped files"""
         audio_extensions = {".mp3", ".wav", ".flac", ".ogg", ".aac", ".m4a",
-                          ".wma", ".opus", ".ape", ".tta", ".wv", ".ac3",
-                          ".dts", ".mp2", ".au", ".amr"}
+                           ".wma", ".opus", ".ape", ".tta", ".wv", ".ac3",
+                           ".dts", ".mp2", ".au", ".amr"}
 
         added = 0
         for file_path in files:
@@ -448,7 +448,7 @@ class AudioTab:
                     size = os.path.getsize(file) / (1024 * 1024)
                     self.file_listbox.insert("end", f"{idx}. {filename}\n")
                     self.file_listbox.insert("end", f"   Size: {size:.1f} MB\n\n")
-                except:
+                except (OSError, IOError):
                     self.file_listbox.insert("end", f"{idx}. {filename}\n\n")
         else:
             self.file_listbox.insert("end", "Click 'Add Files' to select audio files")
@@ -548,6 +548,8 @@ class AudioTab:
                 else:
                     channels = None
 
+                # Create a local copy of idx for lambda
+                current_idx = idx
                 result = self.converter.convert(
                     input_file=input_file,
                     output_dir=self.output_dir_var.get(),
@@ -557,13 +559,13 @@ class AudioTab:
                     sample_rate=sample_rate,
                     channels=channels,
                     preserve_metadata=True,
-                    progress_callback=lambda p, s: self._update_status((idx - 1 + p) / total, s),
+                    progress_callback=lambda p, s, i=current_idx: self._update_status((i - 1 + p) / total, s),
                 )
 
                 if result:
                     successful += 1
 
-            except Exception as e:
+            except (OSError, IOError, ValueError) as e:
                 logger.error(f"Conversion failed for {input_file}: {e}")
 
         # Final status

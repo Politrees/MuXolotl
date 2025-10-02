@@ -1,5 +1,4 @@
-"""Format detection and validation for MuXolotl
-"""
+"""Format detection and validation for MuXolotl"""
 
 import re
 import subprocess
@@ -7,6 +6,7 @@ import subprocess
 from utils.logger import get_logger
 
 logger = get_logger()
+
 
 class FormatDetector:
     """Detect and validate available formats"""
@@ -33,7 +33,7 @@ class FormatDetector:
                 timeout=5,
             )
             return result.stdout
-        except Exception as e:
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
             logger.error(f"FFmpeg command failed: {e}")
             return ""
 
@@ -184,10 +184,10 @@ class FormatDetector:
 
     def test_hwaccel(self, hwaccel: str) -> bool:
         """Test if hardware acceleration actually works
-        
+
         Args:
             hwaccel: Hardware acceleration method to test
-            
+
         Returns:
             True if working, False otherwise
 
@@ -227,13 +227,13 @@ class FormatDetector:
 
             return True
 
-        except Exception as e:
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
             logger.debug(f"Hardware acceleration test failed for {hwaccel}: {e}")
             return False
 
     def get_working_hwaccels(self) -> set[str]:
         """Get only hardware accelerations that actually work
-        
+
         Returns:
             Set of working hardware acceleration methods
 
@@ -261,10 +261,10 @@ class FormatDetector:
 
     def test_encoder(self, encoder: str) -> bool:
         """Test if encoder actually works
-        
+
         Args:
             encoder: Encoder name to test
-            
+
         Returns:
             True if working, False otherwise
 
@@ -301,7 +301,7 @@ class FormatDetector:
 
             return True
 
-        except Exception as e:
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
             logger.debug(f"Encoder test failed for {encoder}: {e}")
             return False
 

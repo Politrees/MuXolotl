@@ -2,6 +2,7 @@
 Provides low-level FFmpeg command construction and execution
 """
 
+import json
 import re
 import subprocess
 from collections.abc import Callable
@@ -9,6 +10,7 @@ from collections.abc import Callable
 from utils.logger import get_logger
 
 logger = get_logger()
+
 
 class FFmpegWrapper:
     """Wrapper for FFmpeg operations"""
@@ -29,9 +31,9 @@ class FFmpegWrapper:
                 timeout=5,
             )
             logger.debug("FFmpeg verified successfully")
-        except Exception as e:
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
             logger.error(f"FFmpeg not found or not working: {e}")
-            raise RuntimeError("FFmpeg is not available. Please install FFmpeg.")
+            raise RuntimeError("FFmpeg is not available. Please install FFmpeg.") from e
 
     def cancel(self):
         """Cancel current operation"""
@@ -40,7 +42,7 @@ class FFmpegWrapper:
             try:
                 self.current_process.terminate()
                 logger.info("Conversion cancelled by user")
-            except:
+            except (OSError, subprocess.SubprocessError):
                 pass
 
     def build_command(
@@ -50,12 +52,12 @@ class FFmpegWrapper:
         params: dict[str, any],
     ) -> list[str]:
         """Build FFmpeg command from parameters
-        
+
         Args:
             input_file: Input file path
             output_file: Output file path
             params: Dictionary of FFmpeg parameters
-            
+
         Returns:
             List of command arguments
 
@@ -85,7 +87,7 @@ class FFmpegWrapper:
                         cmd.extend(["-global_quality", str(params["cq"])])
                     elif "amf" in codec:
                         cmd.extend(["-qp_i", str(params["cq"]),
-                                  "-qp_p", str(params["cq"])])
+                                   "-qp_p", str(params["cq"])])
 
                 # Software encoder quality (CRF)
                 elif params.get("crf") is not None:
@@ -157,11 +159,11 @@ class FFmpegWrapper:
         progress_callback: Callable[[float, str], None] | None = None,
     ) -> bool:
         """Execute FFmpeg command
-        
+
         Args:
             command: FFmpeg command as list
             progress_callback: Optional callback for progress updates (progress, status)
-            
+
         Returns:
             True if successful, False otherwise
 
@@ -171,58 +173,58 @@ class FFmpegWrapper:
         try:
             logger.debug(f"Executing: {' '.join(command)}")
 
-            self.current_process = subprocess.Popen(
+            with subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 bufsize=1,
-            )
+            ) as process:
+                self.current_process = process
+                duration = None
+                output_lines = []
 
-            duration = None
-            output_lines = []
+                for line in process.stdout:
+                    # Check if cancelled
+                    if self.should_cancel:
+                        process.terminate()
+                        logger.info("Process cancelled by user")
+                        return False
 
-            for line in self.current_process.stdout:
-                # Check if cancelled
-                if self.should_cancel:
-                    self.current_process.terminate()
-                    logger.info("Process cancelled by user")
+                    output_lines.append(line)
+
+                    # Extract duration
+                    if duration is None:
+                        duration_match = re.search(r"Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})", line)
+                        if duration_match:
+                            h, m, s = duration_match.groups()
+                            duration = int(h) * 3600 + int(m) * 60 + float(s)
+
+                    # Extract progress
+                    if progress_callback and duration:
+                        time_match = re.search(r"time=(\d{2}):(\d{2}):(\d{2}\.\d{2})", line)
+                        if time_match:
+                            h, m, s = time_match.groups()
+                            current_time = int(h) * 3600 + int(m) * 60 + float(s)
+                            progress = min(current_time / duration, 1.0)
+
+                            # Extract speed info
+                            speed_match = re.search(r"speed=\s*([\d.]+)x", line)
+                            speed_info = f" @ {speed_match.group(1)}x" if speed_match else ""
+
+                            progress_callback(progress, f"Processing... {int(progress * 100)}%{speed_info}")
+
+                process.wait()
+
+                if process.returncode != 0:
+                    error_output = "\n".join(output_lines[-20:])
+                    logger.error(f"FFmpeg failed with code {process.returncode}:\n{error_output}")
                     return False
-
-                output_lines.append(line)
-
-                # Extract duration
-                if duration is None:
-                    duration_match = re.search(r"Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})", line)
-                    if duration_match:
-                        h, m, s = duration_match.groups()
-                        duration = int(h) * 3600 + int(m) * 60 + float(s)
-
-                # Extract progress
-                if progress_callback and duration:
-                    time_match = re.search(r"time=(\d{2}):(\d{2}):(\d{2}\.\d{2})", line)
-                    if time_match:
-                        h, m, s = time_match.groups()
-                        current_time = int(h) * 3600 + int(m) * 60 + float(s)
-                        progress = min(current_time / duration, 1.0)
-
-                        # Extract speed info
-                        speed_match = re.search(r"speed=\s*([\d.]+)x", line)
-                        speed_info = f" @ {speed_match.group(1)}x" if speed_match else ""
-
-                        progress_callback(progress, f"Processing... {int(progress * 100)}%{speed_info}")
-
-            self.current_process.wait()
-
-            if self.current_process.returncode != 0:
-                error_output = "\n".join(output_lines[-20:])
-                logger.error(f"FFmpeg failed with code {self.current_process.returncode}:\n{error_output}")
-                return False
 
             logger.debug("FFmpeg command completed successfully")
             return True
 
-        except Exception as e:
+        except (subprocess.SubprocessError, OSError, IOError) as e:
             logger.error(f"FFmpeg execution failed: {e}", exc_info=True)
             return False
         finally:
@@ -230,10 +232,10 @@ class FFmpegWrapper:
 
     def get_file_info(self, file_path: str) -> dict[str, any]:
         """Get information about media file
-        
+
         Args:
             file_path: Path to media file
-            
+
         Returns:
             Dictionary with file information
 
@@ -250,10 +252,9 @@ class FFmpegWrapper:
             )
 
             if result.returncode == 0:
-                import json
                 return json.loads(result.stdout)
 
-        except Exception as e:
+        except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as e:
             logger.error(f"Failed to get file info: {e}")
 
         return {}

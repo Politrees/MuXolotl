@@ -1,5 +1,4 @@
-"""Audio conversion module for MuXolotl
-"""
+"""Audio conversion module for MuXolotl"""
 
 import os
 from collections.abc import Callable
@@ -11,6 +10,7 @@ from .ffmpeg_wrapper import FFmpegWrapper
 from .format_detector import FormatDetector
 
 logger = get_logger()
+
 
 class AudioConverter:
     """Handle audio file conversions"""
@@ -86,7 +86,7 @@ class AudioConverter:
         progress_callback: Callable[[float, str], None] | None = None,
     ) -> str | None:
         """Convert audio file
-        
+
         Args:
             input_file: Path to input file
             output_dir: Directory for output file
@@ -98,7 +98,7 @@ class AudioConverter:
             quality: Quality setting (format-specific)
             preserve_metadata: Whether to preserve metadata
             progress_callback: Optional callback for progress updates
-            
+
         Returns:
             Path to output file or None if failed
 
@@ -157,14 +157,14 @@ class AudioConverter:
             logger.error(f"Conversion failed for: {input_file}")
             return None
 
-        except Exception as e:
+        except (OSError, IOError, ValueError) as e:
             logger.error(f"Audio conversion error: {e}", exc_info=True)
             return None
 
-    def _get_best_codec(self, format: str) -> str:
+    def _get_best_codec(self, fmt: str) -> str:
         """Get best available codec for format"""
         # Try recommended codec
-        recommended = self.CODEC_MAPPING.get(format)
+        recommended = self.CODEC_MAPPING.get(fmt)
         if recommended and recommended in self.available_codecs:
             return recommended
 
@@ -180,30 +180,30 @@ class AudioConverter:
             "wma": ["wmav2", "wmav1"],
         }
 
-        for codec in fallback_map.get(format, []):
+        for codec in fallback_map.get(fmt, []):
             if codec in self.available_codecs:
                 return codec
 
         # Last resort
         return "copy"
 
-    def _get_quality_params(self, format: str, quality: str) -> list:
+    def _get_quality_params(self, fmt: str, quality: str) -> list:
         """Get quality-specific parameters"""
         params = []
 
-        if format == "mp3":
+        if fmt == "mp3":
             # MP3 VBR quality (0-9, lower is better)
             quality_map = {"highest": "0", "high": "2", "medium": "4", "low": "6"}
             q = quality_map.get(quality, "2")
             params.extend(["-q:a", q])
 
-        elif format == "ogg" or format == "opus":
+        elif fmt in ("ogg", "opus"):
             # Vorbis/Opus quality
             quality_map = {"highest": "10", "high": "8", "medium": "6", "low": "4"}
             q = quality_map.get(quality, "8")
             params.extend(["-q:a", q])
 
-        elif format == "flac":
+        elif fmt == "flac":
             # FLAC compression level (0-12)
             quality_map = {"highest": "12", "high": "8", "medium": "5", "low": "0"}
             q = quality_map.get(quality, "5")
@@ -214,7 +214,10 @@ class AudioConverter:
     def get_supported_formats(self) -> list:
         """Get list of supported audio formats"""
         available = self.detector.get_audio_formats()
-        return sorted([fmt for fmt in self.FORMAT_MAPPING.keys() if self.FORMAT_MAPPING[fmt] in available or fmt in available])
+        return sorted([
+            fmt for fmt in self.FORMAT_MAPPING
+            if self.FORMAT_MAPPING[fmt] in available or fmt in available
+        ])
 
     def get_file_info(self, file_path: str) -> dict[str, any]:
         """Get audio file information"""

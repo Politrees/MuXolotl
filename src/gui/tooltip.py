@@ -1,16 +1,14 @@
-"""Tooltip system for MuXolotl
-"""
+"""Tooltip system for MuXolotl"""
 
 from tkinter import Label, Toplevel
 
 
 class ToolTip:
-    """Create a tooltip for a given widget with modern styling
-    """
+    """Create a tooltip for a given widget with modern styling"""
 
     def __init__(self, widget, text, delay=500):
         """Initialize tooltip
-        
+
         Args:
             widget: Widget to attach tooltip to
             text: Tooltip text (can be multiline)
@@ -29,7 +27,7 @@ class ToolTip:
         self.widget.bind("<Leave>", self.hide)
         self.widget.bind("<Button>", self.hide)
 
-    def schedule(self, event=None):
+    def schedule(self, _event=None):
         """Schedule tooltip to appear after delay"""
         self.unschedule()
         self.id = self.widget.after(self.delay, self.show)
@@ -70,7 +68,7 @@ class ToolTip:
         )
         label.pack()
 
-    def hide(self, event=None):
+    def hide(self, _event=None):
         """Hide tooltip"""
         self.unschedule()
         tw = self.tipwindow
@@ -81,12 +79,12 @@ class ToolTip:
 
 def create_tooltip(widget, text, delay=500):
     """Helper function to create tooltip
-    
+
     Args:
         widget: Widget to attach tooltip to
         text: Tooltip text
         delay: Delay before showing (ms)
-    
+
     Returns:
         ToolTip instance
 

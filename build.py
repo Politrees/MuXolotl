@@ -9,6 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from PIL import Image, ImageDraw, ImageFont
+
 
 def clean_build_dirs():
     """Clean previous build directories"""
@@ -22,6 +24,7 @@ def clean_build_dirs():
     spec_file = "MuXolotl.spec"
     if os.path.exists(spec_file):
         os.remove(spec_file)
+
 
 def check_dependencies():
     """Check if required dependencies are installed"""
@@ -39,6 +42,7 @@ def check_dependencies():
         print("Installing missing dependencies...")
         subprocess.check_call([sys.executable, "-m", "pip", "install"] + missing)
 
+
 def download_ffmpeg():
     """Download FFmpeg (you can customize this to automatically download FFmpeg)
     For now, it just checks if FFmpeg is available
@@ -53,12 +57,13 @@ def download_ffmpeg():
         if result.returncode == 0:
             print("✓ FFmpeg found")
             return True
-    except:
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         pass
 
     print("⚠ FFmpeg not found in PATH")
     print("Please install FFmpeg manually or place ffmpeg.exe in the project directory")
     return False
+
 
 def create_icon():
     """Create application icon if not exists"""
@@ -70,15 +75,13 @@ def create_icon():
 
         # Create a simple icon using PIL
         try:
-            from PIL import Image, ImageDraw, ImageFont
-
             img = Image.new("RGB", (256, 256), color="#1F6AA5")
             draw = ImageDraw.Draw(img)
 
             # Draw simple text
             try:
                 font = ImageFont.truetype("arial.ttf", 80)
-            except:
+            except (IOError, OSError):
                 font = ImageFont.load_default()
 
             text = "MX"
@@ -91,8 +94,9 @@ def create_icon():
 
             img.save(icon_path)
             print(f"✓ Icon created at {icon_path}")
-        except Exception as e:
+        except (IOError, OSError) as e:
             print(f"Could not create icon: {e}")
+
 
 def build_executable():
     """Build executable using PyInstaller"""
@@ -110,7 +114,7 @@ def build_executable():
     # Add icon
     icon_path = Path("assets/icon.ico")
     if icon_path.exists():
-        if system == "Windows" or system == "Darwin":
+        if system in ("Windows", "Darwin"):
             cmd.append("--icon=assets/icon.ico")
 
     # Add data files
@@ -157,6 +161,7 @@ def build_executable():
         print(f"\n✗ Build failed: {e}")
         return False
 
+
 def create_readme_dist():
     """Create README for distribution"""
     readme_content = """
@@ -195,6 +200,7 @@ MIT License - See LICENSE file
         with open(dist_dir / "README.txt", "w", encoding="utf-8") as f:
             f.write(readme_content.strip())
         print("✓ Distribution README created")
+
 
 def main():
     """Main build process"""
@@ -242,6 +248,7 @@ def main():
     print("1. Test the executable in dist/ directory")
     print("2. Ensure FFmpeg is available")
     print("3. Create GitHub release with the executable")
+
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,4 @@
-"""Settings window for MuXolotl
-"""
+"""Settings window for MuXolotl"""
 
 from tkinter import messagebox
 
@@ -17,6 +16,7 @@ COLORS = {
     "border": "#475569",
 }
 
+
 class SettingsWindow(ctk.CTkToplevel):
     """Modern settings window"""
 
@@ -28,6 +28,26 @@ class SettingsWindow(ctk.CTkToplevel):
         self.title("Settings - MuXolotl")
         self.geometry("600x500")
         self.resizable(False, False)
+
+        # Initialize all settings variables
+        self.output_dir_var = ctk.StringVar(value=self.config.get("last_output_dir"))
+        self.thread_var = ctk.StringVar(value=str(self.config.get("advanced.thread_count", "auto")))
+        self.overwrite_var = ctk.BooleanVar(value=self.config.get("advanced.overwrite_files", True))
+        self.metadata_var = ctk.BooleanVar(value=self.config.get("advanced.preserve_metadata", True))
+        
+        # Audio settings
+        self.audio_format_var = ctk.StringVar(value=self.config.get("audio.default_format", "mp3"))
+        self.audio_codec_var = ctk.StringVar(value=self.config.get("audio.default_codec", "auto"))
+        self.audio_bitrate_var = ctk.StringVar(value=self.config.get("audio.default_bitrate", "192k"))
+        
+        # Video settings
+        self.video_format_var = ctk.StringVar(value=self.config.get("video.default_format", "mp4"))
+        self.video_codec_var = ctk.StringVar(value=self.config.get("video.default_video_codec", "libx264"))
+        self.video_preset_var = ctk.StringVar(value=self.config.get("video.default_preset", "medium"))
+        self.video_crf_var = ctk.StringVar(value=self.config.get("video.default_crf", "23"))
+        
+        # Advanced settings
+        self.hwaccel_var = ctk.StringVar(value=self.config.get("advanced.hardware_acceleration", "auto"))
 
         # Center window
         self.update_idletasks()
@@ -123,8 +143,6 @@ class SettingsWindow(ctk.CTkToplevel):
         dir_frame = ctk.CTkFrame(scroll, fg_color=COLORS["bg_light"], corner_radius=8)
         dir_frame.pack(fill="x", pady=10)
 
-        self.output_dir_var = ctk.StringVar(value=self.config.get("last_output_dir"))
-
         ctk.CTkEntry(
             dir_frame,
             textvariable=self.output_dir_var,
@@ -144,8 +162,6 @@ class SettingsWindow(ctk.CTkToplevel):
             font=ctk.CTkFont(size=12),
         ).pack(side="left", padx=15, pady=15)
 
-        self.thread_var = ctk.StringVar(value=str(self.config.get("advanced.thread_count", "auto")))
-
         ctk.CTkOptionMenu(
             thread_frame,
             variable=self.thread_var,
@@ -161,7 +177,6 @@ class SettingsWindow(ctk.CTkToplevel):
         options_frame = ctk.CTkFrame(scroll, fg_color=COLORS["bg_light"], corner_radius=8)
         options_frame.pack(fill="x", pady=10)
 
-        self.overwrite_var = ctk.BooleanVar(value=self.config.get("advanced.overwrite_files", True))
         ctk.CTkCheckBox(
             options_frame,
             text="Overwrite existing files",
@@ -173,7 +188,6 @@ class SettingsWindow(ctk.CTkToplevel):
             hover_color=COLORS["primary_hover"],
         ).pack(anchor="w", padx=15, pady=10)
 
-        self.metadata_var = ctk.BooleanVar(value=self.config.get("advanced.preserve_metadata", True))
         ctk.CTkCheckBox(
             options_frame,
             text="Preserve metadata (recommended)",
@@ -201,7 +215,7 @@ class SettingsWindow(ctk.CTkToplevel):
             "Default Format:",
             "audio_format",
             ["mp3", "wav", "flac", "ogg", "aac", "m4a"],
-            self.config.get("audio.default_format", "mp3"),
+            self.audio_format_var,
         )
 
         # Default codec
@@ -210,7 +224,7 @@ class SettingsWindow(ctk.CTkToplevel):
             "Default Codec:",
             "audio_codec",
             ["auto", "libmp3lame", "aac", "flac", "libvorbis"],
-            self.config.get("audio.default_codec", "auto"),
+            self.audio_codec_var,
         )
 
         # Default bitrate
@@ -219,7 +233,7 @@ class SettingsWindow(ctk.CTkToplevel):
             "Default Bitrate:",
             "audio_bitrate",
             ["128k", "160k", "192k", "256k", "320k"],
-            self.config.get("audio.default_bitrate", "192k"),
+            self.audio_bitrate_var,
         )
 
     def _setup_video_tab(self, parent):
@@ -238,7 +252,7 @@ class SettingsWindow(ctk.CTkToplevel):
             "Default Format:",
             "video_format",
             ["mp4", "mkv", "avi", "mov", "webm"],
-            self.config.get("video.default_format", "mp4"),
+            self.video_format_var,
         )
 
         # Default video codec
@@ -247,7 +261,7 @@ class SettingsWindow(ctk.CTkToplevel):
             "Video Codec:",
             "video_codec",
             ["libx264", "libx265", "libvpx-vp9", "mpeg4"],
-            self.config.get("video.default_video_codec", "libx264"),
+            self.video_codec_var,
         )
 
         # Default preset
@@ -256,7 +270,7 @@ class SettingsWindow(ctk.CTkToplevel):
             "Encoding Preset:",
             "video_preset",
             ["veryfast", "fast", "medium", "slow", "slower"],
-            self.config.get("video.default_preset", "medium"),
+            self.video_preset_var,
         )
 
         # Default CRF
@@ -265,7 +279,7 @@ class SettingsWindow(ctk.CTkToplevel):
             "Default CRF:",
             "video_crf",
             ["18", "20", "23", "26", "28"],
-            self.config.get("video.default_crf", "23"),
+            self.video_crf_var,
         )
 
     def _setup_advanced_tab(self, parent):
@@ -284,7 +298,7 @@ class SettingsWindow(ctk.CTkToplevel):
             "Hardware Accel:",
             "hwaccel",
             ["auto", "none", "cuda", "qsv", "dxva2"],
-            self.config.get("advanced.hardware_acceleration", "auto"),
+            self.hwaccel_var,
         )
 
         # Warning
@@ -308,7 +322,7 @@ class SettingsWindow(ctk.CTkToplevel):
             text_color=COLORS["text_primary"],
         ).pack(anchor="w", pady=(10, 5))
 
-    def _create_option_row(self, parent, label_text, var_name, values, default):
+    def _create_option_row(self, parent, label_text, var_name, values, variable):
         """Create option row"""
         row_frame = ctk.CTkFrame(parent, fg_color="transparent")
         row_frame.pack(fill="x", padx=15, pady=8)
@@ -321,12 +335,9 @@ class SettingsWindow(ctk.CTkToplevel):
             anchor="w",
         ).pack(side="left", padx=(0, 10))
 
-        var = ctk.StringVar(value=default)
-        setattr(self, f"{var_name}_var", var)
-
         ctk.CTkOptionMenu(
             row_frame,
-            variable=var,
+            variable=variable,
             values=values,
             width=200,
             fg_color=COLORS["bg_dark"],
@@ -362,5 +373,5 @@ class SettingsWindow(ctk.CTkToplevel):
             messagebox.showinfo("Success", "Settings saved successfully!")
             self.destroy()
 
-        except Exception as e:
+        except (AttributeError, KeyError, ValueError) as e:
             messagebox.showerror("Error", f"Failed to save settings:\n{e!s}")
