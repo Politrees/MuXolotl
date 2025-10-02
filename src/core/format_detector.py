@@ -321,67 +321,106 @@ class FormatDetector:
             if is_hardware:
                 if "amf" in encoder.lower():
                     # AMD AMF needs special handling - use color filter instead of testsrc
-                    base_cmd.extend([
-                        "-f", "lavfi",
-                        "-i", "color=c=black:s=256x256:d=0.1:r=1",
-                        "-c:v", encoder,
-                    ])
+                    base_cmd.extend(
+                        [
+                            "-f",
+                            "lavfi",
+                            "-i",
+                            "color=c=black:s=256x256:d=0.1:r=1",
+                            "-c:v",
+                            encoder,
+                        ]
+                    )
                     logger.debug(f"Testing AMF encoder {encoder} with color filter")
 
                 elif "qsv" in encoder.lower():
                     # Intel QSV - try with hardware device initialization
-                    base_cmd.extend([
-                        "-init_hw_device", "qsv=hw",
-                        "-filter_hw_device", "hw",
-                        "-f", "lavfi",
-                        "-i", "color=c=black:s=256x256:d=0.1:r=1",
-                        "-c:v", encoder,
-                    ])
+                    base_cmd.extend(
+                        [
+                            "-init_hw_device",
+                            "qsv=hw",
+                            "-filter_hw_device",
+                            "hw",
+                            "-f",
+                            "lavfi",
+                            "-i",
+                            "color=c=black:s=256x256:d=0.1:r=1",
+                            "-c:v",
+                            encoder,
+                        ]
+                    )
                     logger.debug(f"Testing QSV encoder {encoder} with hw device init")
 
                 elif "nvenc" in encoder.lower():
                     # NVIDIA NVENC
-                    base_cmd.extend([
-                        "-f", "lavfi",
-                        "-i", "color=c=black:s=256x256:d=0.1:r=1",
-                        "-c:v", encoder,
-                    ])
+                    base_cmd.extend(
+                        [
+                            "-f",
+                            "lavfi",
+                            "-i",
+                            "color=c=black:s=256x256:d=0.1:r=1",
+                            "-c:v",
+                            encoder,
+                        ]
+                    )
                     logger.debug(f"Testing NVENC encoder {encoder}")
 
                 elif "videotoolbox" in encoder.lower():
                     # Apple VideoToolbox
-                    base_cmd.extend([
-                        "-f", "lavfi",
-                        "-i", "color=c=black:s=256x256:d=0.1:r=1",
-                        "-c:v", encoder,
-                    ])
+                    base_cmd.extend(
+                        [
+                            "-f",
+                            "lavfi",
+                            "-i",
+                            "color=c=black:s=256x256:d=0.1:r=1",
+                            "-c:v",
+                            encoder,
+                        ]
+                    )
                     logger.debug(f"Testing VideoToolbox encoder {encoder}")
 
                 elif "vaapi" in encoder.lower():
                     # Linux VAAPI
-                    base_cmd.extend([
-                        "-init_hw_device", "vaapi=hw:/dev/dri/renderD128",
-                        "-filter_hw_device", "hw",
-                        "-f", "lavfi",
-                        "-i", "color=c=black:s=256x256:d=0.1:r=1",
-                        "-c:v", encoder,
-                    ])
+                    base_cmd.extend(
+                        [
+                            "-init_hw_device",
+                            "vaapi=hw:/dev/dri/renderD128",
+                            "-filter_hw_device",
+                            "hw",
+                            "-f",
+                            "lavfi",
+                            "-i",
+                            "color=c=black:s=256x256:d=0.1:r=1",
+                            "-c:v",
+                            encoder,
+                        ]
+                    )
                     logger.debug(f"Testing VAAPI encoder {encoder}")
 
                 else:
                     # Generic hardware
-                    base_cmd.extend([
-                        "-f", "lavfi",
-                        "-i", "testsrc=duration=0.1:size=256x256:rate=1",
-                        "-c:v", encoder,
-                    ])
+                    base_cmd.extend(
+                        [
+                            "-f",
+                            "lavfi",
+                            "-i",
+                            "testsrc=duration=0.1:size=256x256:rate=1",
+                            "-c:v",
+                            encoder,
+                        ]
+                    )
             else:
                 # Software encoder
-                base_cmd.extend([
-                    "-f", "lavfi",
-                    "-i", "testsrc=duration=0.1:size=256x256:rate=1",
-                    "-c:v", encoder,
-                ])
+                base_cmd.extend(
+                    [
+                        "-f",
+                        "lavfi",
+                        "-i",
+                        "testsrc=duration=0.1:size=256x256:rate=1",
+                        "-c:v",
+                        encoder,
+                    ]
+                )
 
             # Complete command
             base_cmd.extend(["-frames:v", "1", "-f", "null", "-"])

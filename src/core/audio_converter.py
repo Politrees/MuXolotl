@@ -91,14 +91,14 @@ class AudioConverter:
     # Experimental codecs that need -strict -2
     EXPERIMENTAL_CODECS = {
         "vorbis",  # Native vorbis (not libvorbis)
-        "opus",    # Native opus (not libopus)
-        "aac",     # Native aac in some builds
+        "opus",  # Native opus (not libopus)
+        "aac",  # Native aac in some builds
         "dca",  # DTS encoder
     }
 
     # Formats with strict sample rate requirements
     SAMPLE_RATE_REQUIREMENTS = {
-        "amr": 8000,   # AMR-NB requires 8000 Hz
+        "amr": 8000,  # AMR-NB requires 8000 Hz
         "awb": 16000,  # AMR-WB requires 16000 Hz
     }
 
@@ -258,7 +258,6 @@ class AudioConverter:
         progress_callback: Callable[[float, str], None] | None,
     ) -> str | None:
         """Convert with automatic fallback if codec fails"""
-
         # Get all compatible codecs for this format
         compatible_codecs = self.FORMAT_CODEC_COMPATIBILITY.get(output_format, [codec])
 
@@ -363,7 +362,6 @@ class AudioConverter:
 
     def _get_best_codec(self, fmt: str) -> str:
         """Get best available codec for format"""
-
         # Get compatible codecs for this format
         compatible = self.FORMAT_CODEC_COMPATIBILITY.get(fmt, [])
 

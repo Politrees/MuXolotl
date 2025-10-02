@@ -464,6 +464,7 @@ class AudioTab:
             # Check if drag & drop is available
             try:
                 from tkinterdnd2 import DND_FILES
+
                 self.file_listbox.insert("end", "💡 Or drag & drop files here")
             except ImportError:
                 pass

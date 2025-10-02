@@ -200,8 +200,7 @@ class VideoConverter:
                     else:
                         logger.debug(f"Using H.264 encoder: {encoder}")
                     break
-                else:
-                    logger.debug(f"Encoder {encoder} available but failed test")
+                logger.debug(f"Encoder {encoder} available but failed test")
 
         # Test HEVC encoders (filtered by GPU)
         hevc_filtered = filter_encoders_by_gpu(recommended["hevc"])
@@ -371,7 +370,6 @@ class VideoConverter:
         progress_callback: Callable[[float, str], None] | None,
     ) -> str | None:
         """Convert with automatic fallback if encoders fail"""
-
         # Get compatible video codecs for this format
         compatible_video = self.FORMAT_VIDEO_CODEC_COMPATIBILITY.get(output_format, [video_codec])
         compatible_audio = self.FORMAT_AUDIO_CODEC_COMPATIBILITY.get(output_format, [audio_codec])
@@ -395,7 +393,7 @@ class VideoConverter:
         # Build list of video codecs to try (filtered)
         compatible_video = filter_by_gpu(compatible_video)
         video_codecs_to_try = []
-        
+
         if video_codec in compatible_video:
             video_codecs_to_try.append(video_codec)
 
@@ -428,7 +426,7 @@ class VideoConverter:
                 if v_attempt > 1 or a_attempt > 1:
                     logger.warning(f"Trying fallback: video={current_video_codec}, audio={current_audio_codec} (attempt {attempt})")
                     if progress_callback:
-                        progress_callback(0.05, f"⚠️ Retrying with different codecs...")
+                        progress_callback(0.05, "⚠️ Retrying with different codecs...")
 
                 # Determine hardware acceleration
                 actual_hwaccel = None
