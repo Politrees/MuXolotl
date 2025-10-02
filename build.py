@@ -50,7 +50,8 @@ def download_ffmpeg():
     try:
         result = subprocess.run(
             ["ffmpeg", "-version"],
-            check=False, stdout=subprocess.PIPE,
+            check=False,
+            stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=5,
         )
@@ -81,7 +82,7 @@ def create_icon():
             # Draw simple text
             try:
                 font = ImageFont.truetype("arial.ttf", 80)
-            except (IOError, OSError):
+            except OSError:
                 font = ImageFont.load_default()
 
             text = "MX"
@@ -94,7 +95,7 @@ def create_icon():
 
             img.save(icon_path)
             print(f"✓ Icon created at {icon_path}")
-        except (IOError, OSError) as e:
+        except OSError as e:
             print(f"Could not create icon: {e}")
 
 
@@ -118,10 +119,12 @@ def build_executable():
             cmd.append("--icon=assets/icon.ico")
 
     # Add data files
-    cmd.extend([
-        "--add-data=src:src",
-        "--add-data=assets:assets",  # Add this line to include assets folder
-    ])
+    cmd.extend(
+        [
+            "--add-data=src:src",
+            "--add-data=assets:assets",  # Add this line to include assets folder
+        ]
+    )
 
     # Hidden imports
     hidden_imports = [
@@ -153,7 +156,7 @@ def build_executable():
 
         if exe_path.exists():
             print(f"\n📦 Executable location: {exe_path.absolute()}")
-            print(f"📊 File size: {exe_path.stat().st_size / (1024*1024):.1f} MB")
+            print(f"📊 File size: {exe_path.stat().st_size / (1024 * 1024):.1f} MB")
 
         return True
 

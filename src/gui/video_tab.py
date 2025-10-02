@@ -7,9 +7,9 @@ from tkinter import filedialog, messagebox
 
 import customtkinter as ctk
 
+from core.audio_converter import AudioConverter
 from core.format_detector import FormatDetector
 from core.video_converter import VideoConverter
-from core.audio_converter import AudioConverter
 from utils.logger import get_logger
 
 from .tooltip import TOOLTIPS, create_tooltip
@@ -42,7 +42,7 @@ class VideoTab:
         self.detector = FormatDetector()
         self.input_file = None
         self.is_converting = False
-        
+
         # Initialize all attribute variables
         self.show_advanced = False
         self.resolution_var = None
@@ -747,7 +747,7 @@ class VideoTab:
                         info_text = f"{info_text} | {mins}:{secs:02d}"
 
                 self.file_info_label.configure(text=info_text)
-            except (OSError, IOError, KeyError, ValueError):
+            except (OSError, KeyError, ValueError):
                 self.file_info_label.configure(text="")
         else:
             self.file_name_label.configure(text="No file selected")
@@ -907,7 +907,7 @@ class VideoTab:
                 self._update_status(0, "❌ Conversion failed")
                 messagebox.showerror("Error", "Conversion failed. Please check the log for details.")
 
-        except (OSError, IOError, ValueError, AttributeError) as e:
+        except (OSError, ValueError, AttributeError) as e:
             if self.is_converting:
                 logger.error(f"Conversion error: {e}", exc_info=True)
                 self._update_status(0, f"❌ Error: {e!s}")

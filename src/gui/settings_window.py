@@ -34,18 +34,18 @@ class SettingsWindow(ctk.CTkToplevel):
         self.thread_var = ctk.StringVar(value=str(self.config.get("advanced.thread_count", "auto")))
         self.overwrite_var = ctk.BooleanVar(value=self.config.get("advanced.overwrite_files", True))
         self.metadata_var = ctk.BooleanVar(value=self.config.get("advanced.preserve_metadata", True))
-        
+
         # Audio settings
         self.audio_format_var = ctk.StringVar(value=self.config.get("audio.default_format", "mp3"))
         self.audio_codec_var = ctk.StringVar(value=self.config.get("audio.default_codec", "auto"))
         self.audio_bitrate_var = ctk.StringVar(value=self.config.get("audio.default_bitrate", "192k"))
-        
+
         # Video settings
         self.video_format_var = ctk.StringVar(value=self.config.get("video.default_format", "mp4"))
         self.video_codec_var = ctk.StringVar(value=self.config.get("video.default_video_codec", "libx264"))
         self.video_preset_var = ctk.StringVar(value=self.config.get("video.default_preset", "medium"))
         self.video_crf_var = ctk.StringVar(value=self.config.get("video.default_crf", "23"))
-        
+
         # Advanced settings
         self.hwaccel_var = ctk.StringVar(value=self.config.get("advanced.hardware_acceleration", "auto"))
 

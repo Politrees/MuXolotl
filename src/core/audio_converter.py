@@ -157,7 +157,7 @@ class AudioConverter:
             logger.error(f"Conversion failed for: {input_file}")
             return None
 
-        except (OSError, IOError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.error(f"Audio conversion error: {e}", exc_info=True)
             return None
 
@@ -214,10 +214,7 @@ class AudioConverter:
     def get_supported_formats(self) -> list:
         """Get list of supported audio formats"""
         available = self.detector.get_audio_formats()
-        return sorted([
-            fmt for fmt in self.FORMAT_MAPPING
-            if self.FORMAT_MAPPING[fmt] in available or fmt in available
-        ])
+        return sorted([fmt for fmt in self.FORMAT_MAPPING if self.FORMAT_MAPPING[fmt] in available or fmt in available])
 
     def get_file_info(self, file_path: str) -> dict[str, any]:
         """Get audio file information"""

@@ -48,7 +48,7 @@ class Config:
                     loaded = json.load(f)
                     # Merge with defaults
                     return self._merge_configs(self.DEFAULT_CONFIG.copy(), loaded)
-            except (json.JSONDecodeError, IOError, OSError):
+            except (json.JSONDecodeError, OSError):
                 pass
         return self.DEFAULT_CONFIG.copy()
 
@@ -66,7 +66,7 @@ class Config:
         try:
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(self.config, f, indent=2, ensure_ascii=False)
-        except (IOError, OSError, PermissionError) as e:
+        except (OSError, PermissionError) as e:
             print(f"Failed to save config: {e}")
 
     def get(self, key_path, default=None):
