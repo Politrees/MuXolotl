@@ -1,10 +1,9 @@
-"""
-Core modules for MuXolotl
+"""Core modules for MuXolotl
 """
 
+from .audio_converter import AudioConverter
 from .ffmpeg_wrapper import FFmpegWrapper
 from .format_detector import FormatDetector
-from .audio_converter import AudioConverter
 from .video_converter import VideoConverter
 
-__all__ = ['FFmpegWrapper', 'FormatDetector', 'AudioConverter', 'VideoConverter']
+__all__ = ["AudioConverter", "FFmpegWrapper", "FormatDetector", "VideoConverter"]

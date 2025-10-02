@@ -1,22 +1,21 @@
-"""
-Tooltip system for MuXolotl
+"""Tooltip system for MuXolotl
 """
 
-import customtkinter as ctk
-from tkinter import Toplevel, Label
+from tkinter import Label, Toplevel
+
 
 class ToolTip:
+    """Create a tooltip for a given widget with modern styling
     """
-    Create a tooltip for a given widget with modern styling
-    """
+
     def __init__(self, widget, text, delay=500):
-        """
-        Initialize tooltip
+        """Initialize tooltip
         
         Args:
             widget: Widget to attach tooltip to
             text: Tooltip text (can be multiline)
             delay: Delay in milliseconds before showing tooltip
+
         """
         self.widget = widget
         self.text = text
@@ -24,53 +23,53 @@ class ToolTip:
         self.tipwindow = None
         self.id = None
         self.x = self.y = 0
-        
+
         # Bind events
         self.widget.bind("<Enter>", self.schedule)
         self.widget.bind("<Leave>", self.hide)
         self.widget.bind("<Button>", self.hide)
-    
+
     def schedule(self, event=None):
         """Schedule tooltip to appear after delay"""
         self.unschedule()
         self.id = self.widget.after(self.delay, self.show)
-    
+
     def unschedule(self):
         """Cancel scheduled tooltip"""
         id_val = self.id
         self.id = None
         if id_val:
             self.widget.after_cancel(id_val)
-    
+
     def show(self):
         """Display tooltip"""
         if self.tipwindow or not self.text:
             return
-        
+
         # Calculate position
         x = self.widget.winfo_rootx() + 20
         y = self.widget.winfo_rooty() + self.widget.winfo_height() + 5
-        
+
         # Create tooltip window
         self.tipwindow = tw = Toplevel(self.widget)
         tw.wm_overrideredirect(True)
         tw.wm_geometry(f"+{x}+{y}")
-        
+
         # Modern styling
         label = Label(
             tw,
             text=self.text,
-            justify='left',
+            justify="left",
             background="#1e293b",
             foreground="#f1f5f9",
-            relief='solid',
+            relief="solid",
             borderwidth=1,
             font=("Segoe UI", 9),
             padx=10,
-            pady=8
+            pady=8,
         )
         label.pack()
-    
+
     def hide(self, event=None):
         """Hide tooltip"""
         self.unschedule()
@@ -81,8 +80,7 @@ class ToolTip:
 
 
 def create_tooltip(widget, text, delay=500):
-    """
-    Helper function to create tooltip
+    """Helper function to create tooltip
     
     Args:
         widget: Widget to attach tooltip to
@@ -91,6 +89,7 @@ def create_tooltip(widget, text, delay=500):
     
     Returns:
         ToolTip instance
+
     """
     return ToolTip(widget, text, delay)
 
@@ -241,5 +240,5 @@ Guidelines (1080p):
 • 15M+ - Very high quality
 
 Higher = Better quality + Larger file
-'auto' uses quality-based encoding (CRF)"""
+'auto' uses quality-based encoding (CRF)""",
 }
