@@ -1,0 +1,93 @@
+name: Build MuXolotl
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      
+      - name: Build executable
+        run: python build.py
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: MuXolotl-Windows
+          path: dist/MuXolotl.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      
+      - name: Build executable
+        run: python build.py
+      
+      - name: Create DMG
+        run: |
+          hdiutil create -volname MuXolotl -srcfolder dist/MuXolotl.app -ov -format UDZO MuXolotl-macOS.dmg
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: MuXolotl-macOS
+          path: MuXolotl-macOS.dmg
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      
+      - name: Build executable
+        run: python build.py
+      
+      - name: Create archive
+        run: |
+          cd dist
+          tar -czf MuXolotl-Linux.tar.gz MuXolotl
+          cd ..
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: MuXolotl-Linux
+          path: dist/MuXolotl-Linux.tar.gz
