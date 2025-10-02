@@ -113,13 +113,16 @@ class FormatDetector:
             "mpg": "mpeg",
             "ts": "mpegts",
             "m2ts": "mpegts",
+            "mts": "mpegts",
             "mxf": "mxf",
             "3gp": "3gp",
             "3g2": "3g2",
             "wmv": "asf",
+            "asf": "asf",
             "vob": "vob",
             "m4v": "mp4",
             "ogv": "ogg",
+            "f4v": "flv",
         }
 
         self._video_formats = {ext for ext, fmt in video_mapping.items() if fmt in formats}
@@ -290,68 +293,175 @@ class FormatDetector:
 
         self._working_hwaccels = working
 
-        # Log only summary
         if working:
-            logger.debug(f"Hardware acceleration available: {', '.join(working)}")
+            logger.debug(f"Hardware acceleration available: {', '.join(sorted(working))}")
         else:
             logger.debug("No working hardware acceleration found")
 
         return self._working_hwaccels
 
-    def test_encoder(self, encoder: str) -> bool:
-        """Test if encoder actually works
+    def test_encoder(self, encoder: str, gpu_detector=None) -> bool:
+        """Test if encoder actually works with GPU-specific optimizations
 
         Args:
             encoder: Encoder name to test
+            gpu_detector: Optional GPUDetector instance for smarter testing
 
         Returns:
             True if working, False otherwise
 
         """
         try:
+            is_hardware = any(hw in encoder.lower() for hw in ["nvenc", "qsv", "amf", "vaapi", "videotoolbox"])
+
+            # Build test command
+            base_cmd = ["ffmpeg", "-hide_banner", "-v", "error"]
+
+            # Add hardware-specific initialization
+            if is_hardware:
+                if "amf" in encoder.lower():
+                    # AMD AMF needs special handling - use color filter instead of testsrc
+                    base_cmd.extend([
+                        "-f", "lavfi",
+                        "-i", "color=c=black:s=256x256:d=0.1:r=1",
+                        "-c:v", encoder,
+                    ])
+                    logger.debug(f"Testing AMF encoder {encoder} with color filter")
+
+                elif "qsv" in encoder.lower():
+                    # Intel QSV - try with hardware device initialization
+                    base_cmd.extend([
+                        "-init_hw_device", "qsv=hw",
+                        "-filter_hw_device", "hw",
+                        "-f", "lavfi",
+                        "-i", "color=c=black:s=256x256:d=0.1:r=1",
+                        "-c:v", encoder,
+                    ])
+                    logger.debug(f"Testing QSV encoder {encoder} with hw device init")
+
+                elif "nvenc" in encoder.lower():
+                    # NVIDIA NVENC
+                    base_cmd.extend([
+                        "-f", "lavfi",
+                        "-i", "color=c=black:s=256x256:d=0.1:r=1",
+                        "-c:v", encoder,
+                    ])
+                    logger.debug(f"Testing NVENC encoder {encoder}")
+
+                elif "videotoolbox" in encoder.lower():
+                    # Apple VideoToolbox
+                    base_cmd.extend([
+                        "-f", "lavfi",
+                        "-i", "color=c=black:s=256x256:d=0.1:r=1",
+                        "-c:v", encoder,
+                    ])
+                    logger.debug(f"Testing VideoToolbox encoder {encoder}")
+
+                elif "vaapi" in encoder.lower():
+                    # Linux VAAPI
+                    base_cmd.extend([
+                        "-init_hw_device", "vaapi=hw:/dev/dri/renderD128",
+                        "-filter_hw_device", "hw",
+                        "-f", "lavfi",
+                        "-i", "color=c=black:s=256x256:d=0.1:r=1",
+                        "-c:v", encoder,
+                    ])
+                    logger.debug(f"Testing VAAPI encoder {encoder}")
+
+                else:
+                    # Generic hardware
+                    base_cmd.extend([
+                        "-f", "lavfi",
+                        "-i", "testsrc=duration=0.1:size=256x256:rate=1",
+                        "-c:v", encoder,
+                    ])
+            else:
+                # Software encoder
+                base_cmd.extend([
+                    "-f", "lavfi",
+                    "-i", "testsrc=duration=0.1:size=256x256:rate=1",
+                    "-c:v", encoder,
+                ])
+
+            # Complete command
+            base_cmd.extend(["-frames:v", "1", "-f", "null", "-"])
+
+            # Run test with appropriate timeout
+            timeout = 20 if is_hardware else 10
+
             result = subprocess.run(
-                [
-                    "ffmpeg",
-                    "-hide_banner",
-                    "-v",
-                    "error",
-                    "-f",
-                    "lavfi",
-                    "-i",
-                    "testsrc=duration=0.1:size=256x256:rate=1",
-                    "-c:v",
-                    encoder,
-                    "-f",
-                    "null",
-                    "-",
-                ],
+                base_cmd,
                 check=False,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                timeout=10,
+                timeout=timeout,
             )
 
             if result.returncode == 0:
+                logger.debug(f"✅ Encoder {encoder} test passed")
                 return True
 
-            # Check for common errors
+            # Analyze errors
             error_output = result.stderr.lower()
-            error_patterns = [
+
+            # Critical errors (encoder definitely doesn't work)
+            critical_patterns = [
                 "unknown encoder",
                 "encoder not found",
                 "cannot load",
                 "not compiled",
-                "no device available",
-                "failed to open",
+                "could not find encoder",
             ]
 
-            for pattern in error_patterns:
+            for pattern in critical_patterns:
                 if pattern in error_output:
+                    logger.debug(f"❌ Encoder {encoder}: {pattern}")
                     return False
+
+            # Hardware-specific errors
+            hw_error_patterns = [
+                "no device available",
+                "failed to open",
+                "cannot initialize",
+                "not supported",
+                "device creation failed",
+                "no hwaccel device",
+            ]
+
+            for pattern in hw_error_patterns:
+                if pattern in error_output:
+                    logger.debug(f"⚠️ Encoder {encoder} unavailable: {pattern}")
+                    return False
+
+            # Special handling for MFX/QSV errors (these can be flaky)
+            if "qsv" in encoder.lower():
+                if any(err in error_output for err in ["mfx", "session", "error creating"]):
+                    logger.debug(f"⚠️ QSV encoder {encoder} has initialization issues, marking as unavailable")
+                    return False
+
+            # Special handling for AMF errors
+            if "amf" in encoder.lower():
+                if any(err in error_output for err in ["amf", "failed to initialize", "context creation"]):
+                    logger.debug(f"⚠️ AMF encoder {encoder} initialization failed")
+                    return False
+
+            # If there's an error but not critical, be cautious
+            if result.returncode != 0:
+                logger.debug(f"⚠️ Encoder {encoder} test returned error {result.returncode}")
+                # For hardware encoders, be strict
+                if is_hardware:
+                    logger.debug(f"❌ Hardware encoder {encoder} failed test, marking unavailable")
+                    return False
+                # For software encoders, be more lenient
+                logger.debug(f"✅ Software encoder {encoder} assumed working despite error")
+                return True
 
             return True
 
-        except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
-            logger.debug(f"Encoder test failed for {encoder}: {e}")
+        except subprocess.TimeoutExpired:
+            logger.debug(f"⏱️ Encoder {encoder} test timed out")
+            return False
+        except (subprocess.SubprocessError, OSError) as e:
+            logger.debug(f"❌ Encoder test failed for {encoder}: {e}")
             return False

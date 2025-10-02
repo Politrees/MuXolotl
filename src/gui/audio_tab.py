@@ -149,7 +149,7 @@ class AudioTab:
         )
 
         # Codec
-        codecs = ["copy (fast)", "auto"] + sorted(list(self.detector.get_audio_codecs()))[:10]
+        codecs = ["auto (recommended)", "copy (fast)"] + sorted(list(self.detector.get_audio_codecs()))[:10]
         self._create_setting_row(
             settings_container,
             "Codec",
@@ -328,38 +328,29 @@ class AudioTab:
             create_tooltip(menu, tooltip)
 
     def _setup_drag_drop(self):
-        """Setup drag and drop for files - Windows compatible"""
-        # Make the textbox accept drops
+        """Setup drag and drop for files - cross-platform compatible"""
         widget = self.file_listbox
 
         # Bind mouse events for visual feedback
-        widget.bind("<Enter>", lambda e: widget.configure(border_width=2))
-        widget.bind("<Leave>", lambda e: widget.configure(border_width=0))
-
-        # Try multiple DnD methods
         try:
-            # Method 1: tkinterdnd2
-            widget.drop_target_register("DND_Files")
+            widget.bind("<Enter>", lambda e: widget.configure(border_width=2, border_color=COLORS["primary"]))
+            widget.bind("<Leave>", lambda e: widget.configure(border_width=0))
+        except (AttributeError, Exception):
+            pass
+
+        # Try to enable drag & drop with tkinterdnd2
+        try:
+            from tkinterdnd2 import DND_FILES
+
+            widget.drop_target_register(DND_FILES)
             widget.dnd_bind("<<Drop>>", self._on_drop_dnd2)
-            logger.debug("Drag & drop enabled (tkinterdnd2)")
+            logger.info("✅ Drag & drop enabled (tkinterdnd2)")
             return
-        except (ImportError, AttributeError):
-            pass
+        except (ImportError, AttributeError, Exception) as e:
+            logger.debug(f"tkinterdnd2 not available: {e}")
 
-        try:
-            # Method 2: Windows specific
-
-            def handle_drop(event):
-                files = widget.tk.splitlist(event.data)
-                self._process_dropped_files(files)
-
-            widget.bind("<Drop>", handle_drop)
-            logger.debug("Drag & drop enabled (Windows)")
-            return
-        except (ImportError, AttributeError):
-            pass
-
-        logger.debug("Drag & drop not available")
+        # Fallback: No drag & drop, just manual file selection
+        logger.debug("Drag & drop not available - use 'Add Files' button")
 
     def _on_drop_dnd2(self, event):
         """Handle drop event from tkinterdnd2"""
@@ -466,7 +457,16 @@ class AudioTab:
                 except OSError:
                     self.file_listbox.insert("end", f"{idx}. {filename}\n\n")
         else:
-            self.file_listbox.insert("end", "Click 'Add Files' to select audio files")
+            # Friendly message with hint
+            self.file_listbox.insert("end", "📂 No files selected\n\n")
+            self.file_listbox.insert("end", "Click 'Add Files' button to select audio files\n\n")
+
+            # Check if drag & drop is available
+            try:
+                from tkinterdnd2 import DND_FILES
+                self.file_listbox.insert("end", "💡 Or drag & drop files here")
+            except ImportError:
+                pass
 
         self.file_listbox.configure(state="disabled")
 
@@ -533,7 +533,7 @@ class AudioTab:
                 codec_str = self.codec_var.get()
                 if "copy" in codec_str.lower():
                     codec = "copy"
-                elif codec_str == "auto":
+                elif "auto" in codec_str.lower():
                     codec = "auto"
                 else:
                     codec = codec_str

@@ -136,7 +136,6 @@ class MuXolotlApp:
 
         # Logo/Icon
         icon_image = Image.open(self._get_resource_path("assets/icon.ico"))
-        # Resize to appropriate size
         icon_image = icon_image.resize((40, 40), Image.Resampling.LANCZOS)
         icon_photo = ctk.CTkImage(light_image=icon_image, dark_image=icon_image, size=(40, 40))
 
@@ -167,11 +166,30 @@ class MuXolotlApp:
         )
         subtitle_label.pack(anchor="w")
 
+        # GPU indicator (center)
+        center_frame = ctk.CTkFrame(top_bar, fg_color="transparent")
+        center_frame.pack(side="left", expand=True, padx=20)
+
+        try:
+            from core.gpu_detector import GPUDetector
+            gpu = GPUDetector()
+            gpu_status = gpu.get_gpu_summary()
+            
+            gpu_label = ctk.CTkLabel(
+                center_frame,
+                text=str(gpu_status),
+                font=ctk.CTkFont(size=11, weight="bold"),
+                text_color=COLORS["success"] if gpu.has_hardware_encoding() else COLORS["text_secondary"],
+            )
+            gpu_label.pack()
+        except (ImportError, Exception) as e:
+            logger.debug(f"Could not display GPU info: {e}")
+
         # Right side - Controls
         right_frame = ctk.CTkFrame(top_bar, fg_color="transparent")
         right_frame.pack(side="right", padx=20, pady=15)
 
-        # Info/About button (small icon button)
+        # Info/About button
         info_btn = ctk.CTkButton(
             right_frame,
             text="ⓘ",
