@@ -5,7 +5,7 @@ on:
     paths:
       - '**/*.py'
       - '**/*.txt'
-      - '.github/workflows/code_linter.yml'
+      - '.github/workflows/linter.yml'
 
 jobs:
   lint:

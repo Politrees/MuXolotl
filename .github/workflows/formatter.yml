@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - '**/*.py'
-      - '.github/workflows/code_formatter.yml'
+      - '.github/workflows/formatter.yml'
 
 jobs:
   format_code:
