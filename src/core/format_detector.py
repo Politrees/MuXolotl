@@ -27,7 +27,8 @@ class FormatDetector:
         try:
             result = subprocess.run(
                 ["ffmpeg"] + args,
-                check=False, stdout=subprocess.PIPE,
+                check=False,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
                 timeout=5,
@@ -56,9 +57,26 @@ class FormatDetector:
 
         # Common audio format mappings
         audio_formats = {
-            "mp3", "wav", "flac", "ogg", "aac", "m4a", "opus",
-            "wma", "aiff", "ac3", "dts", "amr", "ape", "tta",
-            "wv", "mp2", "au", "caf", "w64", "spx",
+            "mp3",
+            "wav",
+            "flac",
+            "ogg",
+            "aac",
+            "m4a",
+            "opus",
+            "wma",
+            "aiff",
+            "ac3",
+            "dts",
+            "amr",
+            "ape",
+            "tta",
+            "wv",
+            "mp2",
+            "au",
+            "caf",
+            "w64",
+            "spx",
         }
 
         self._audio_formats = audio_formats & formats
@@ -85,17 +103,26 @@ class FormatDetector:
 
         # Map extensions to FFmpeg format names
         video_mapping = {
-            "mp4": "mp4", "mkv": "matroska", "avi": "avi",
-            "mov": "mov", "webm": "webm", "flv": "flv",
-            "mpeg": "mpeg", "mpg": "mpeg", "ts": "mpegts",
-            "m2ts": "mpegts", "mxf": "mxf", "3gp": "3gp",
-            "3g2": "3g2", "wmv": "asf", "vob": "vob",
-            "m4v": "mp4", "ogv": "ogg",
+            "mp4": "mp4",
+            "mkv": "matroska",
+            "avi": "avi",
+            "mov": "mov",
+            "webm": "webm",
+            "flv": "flv",
+            "mpeg": "mpeg",
+            "mpg": "mpeg",
+            "ts": "mpegts",
+            "m2ts": "mpegts",
+            "mxf": "mxf",
+            "3gp": "3gp",
+            "3g2": "3g2",
+            "wmv": "asf",
+            "vob": "vob",
+            "m4v": "mp4",
+            "ogv": "ogg",
         }
 
-        self._video_formats = {
-            ext for ext, fmt in video_mapping.items() if fmt in formats
-        }
+        self._video_formats = {ext for ext, fmt in video_mapping.items() if fmt in formats}
 
         if not self._video_formats:
             self._video_formats = {"mp4", "mkv", "avi", "mov", "webm"}
@@ -195,11 +222,23 @@ class FormatDetector:
         try:
             # Try to create a simple test command
             result = subprocess.run(
-                ["ffmpeg", "-hide_banner", "-v", "error",
-                 "-hwaccel", hwaccel,
-                 "-f", "lavfi", "-i", "nullsrc=s=256x256:d=0.1",
-                 "-f", "null", "-"],
-                check=False, stdout=subprocess.PIPE,
+                [
+                    "ffmpeg",
+                    "-hide_banner",
+                    "-v",
+                    "error",
+                    "-hwaccel",
+                    hwaccel,
+                    "-f",
+                    "lavfi",
+                    "-i",
+                    "nullsrc=s=256x256:d=0.1",
+                    "-f",
+                    "null",
+                    "-",
+                ],
+                check=False,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
                 timeout=10,
@@ -271,11 +310,23 @@ class FormatDetector:
         """
         try:
             result = subprocess.run(
-                ["ffmpeg", "-hide_banner", "-v", "error",
-                 "-f", "lavfi", "-i", "testsrc=duration=0.1:size=256x256:rate=1",
-                 "-c:v", encoder,
-                 "-f", "null", "-"],
-                check=False, stdout=subprocess.PIPE,
+                [
+                    "ffmpeg",
+                    "-hide_banner",
+                    "-v",
+                    "error",
+                    "-f",
+                    "lavfi",
+                    "-i",
+                    "testsrc=duration=0.1:size=256x256:rate=1",
+                    "-c:v",
+                    encoder,
+                    "-f",
+                    "null",
+                    "-",
+                ],
+                check=False,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
                 timeout=10,

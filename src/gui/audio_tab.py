@@ -397,9 +397,24 @@ class AudioTab:
 
     def _process_dropped_files(self, files):
         """Process dropped files"""
-        audio_extensions = {".mp3", ".wav", ".flac", ".ogg", ".aac", ".m4a",
-                           ".wma", ".opus", ".ape", ".tta", ".wv", ".ac3",
-                           ".dts", ".mp2", ".au", ".amr"}
+        audio_extensions = {
+            ".mp3",
+            ".wav",
+            ".flac",
+            ".ogg",
+            ".aac",
+            ".m4a",
+            ".wma",
+            ".opus",
+            ".ape",
+            ".tta",
+            ".wv",
+            ".ac3",
+            ".dts",
+            ".mp2",
+            ".au",
+            ".amr",
+        }
 
         added = 0
         for file_path in files:
@@ -448,7 +463,7 @@ class AudioTab:
                     size = os.path.getsize(file) / (1024 * 1024)
                     self.file_listbox.insert("end", f"{idx}. {filename}\n")
                     self.file_listbox.insert("end", f"   Size: {size:.1f} MB\n\n")
-                except (OSError, IOError):
+                except OSError:
                     self.file_listbox.insert("end", f"{idx}. {filename}\n\n")
         else:
             self.file_listbox.insert("end", "Click 'Add Files' to select audio files")
@@ -565,7 +580,7 @@ class AudioTab:
                 if result:
                     successful += 1
 
-            except (OSError, IOError, ValueError) as e:
+            except (OSError, ValueError) as e:
                 logger.error(f"Conversion failed for {input_file}: {e}")
 
         # Final status

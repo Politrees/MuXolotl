@@ -26,7 +26,8 @@ class FFmpegWrapper:
         try:
             subprocess.run(
                 ["ffmpeg", "-version"],
-                check=False, stdout=subprocess.PIPE,
+                check=False,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 timeout=5,
             )
@@ -86,8 +87,7 @@ class FFmpegWrapper:
                     elif "qsv" in codec:
                         cmd.extend(["-global_quality", str(params["cq"])])
                     elif "amf" in codec:
-                        cmd.extend(["-qp_i", str(params["cq"]),
-                                   "-qp_p", str(params["cq"])])
+                        cmd.extend(["-qp_i", str(params["cq"]), "-qp_p", str(params["cq"])])
 
                 # Software encoder quality (CRF)
                 elif params.get("crf") is not None:
@@ -224,7 +224,7 @@ class FFmpegWrapper:
             logger.debug("FFmpeg command completed successfully")
             return True
 
-        except (subprocess.SubprocessError, OSError, IOError) as e:
+        except (subprocess.SubprocessError, OSError) as e:
             logger.error(f"FFmpeg execution failed: {e}", exc_info=True)
             return False
         finally:
@@ -242,10 +242,9 @@ class FFmpegWrapper:
         """
         try:
             result = subprocess.run(
-                ["ffprobe", "-hide_banner", "-v", "quiet",
-                 "-print_format", "json", "-show_format",
-                 "-show_streams", file_path],
-                check=False, stdout=subprocess.PIPE,
+                ["ffprobe", "-hide_banner", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", file_path],
+                check=False,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
                 timeout=10,

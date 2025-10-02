@@ -105,7 +105,6 @@ Common formats:
 • WAV - Uncompressed, largest size
 • AAC/M4A - Modern, efficient compression
 • OGG/OPUS - Open-source, great quality""",
-
     "audio_codec": """Audio Codec
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Determines how audio is encoded.
@@ -116,7 +115,6 @@ Options:
 • Specific codecs - Manual control
 
 Use 'copy' when just changing container!""",
-
     "audio_bitrate": """Audio Bitrate
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Controls audio quality and file size.
@@ -129,7 +127,6 @@ Guidelines:
 • Original - Keep source bitrate
 
 Higher = Better quality + Larger file""",
-
     "audio_sample_rate": """Sample Rate
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Number of audio samples per second.
@@ -140,7 +137,6 @@ Common rates:
 • 96000 Hz - High-resolution audio
 
 Usually best to keep 'Original'""",
-
     "audio_channels": """Audio Channels
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Number of audio channels.
@@ -151,7 +147,6 @@ Options:
 • Stereo - Two channels (L+R)
 
 Most music uses Stereo""",
-
     # Video tooltips
     "video_format": """Output Video Format
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -163,7 +158,6 @@ Popular formats:
 • AVI - Old but widely supported
 • MOV - Apple standard
 • WEBM - Web-optimized, modern""",
-
     "video_codec": """Video Codec
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 How video is compressed/encoded.
@@ -176,7 +170,6 @@ Options:
 • CPU encoders - Universal but slower
 
 Hardware encoding requires GPU support.""",
-
     "speed_profile": """Speed Profile
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Balance between speed and quality.
@@ -188,7 +181,6 @@ Profiles:
 💎 High Quality - Slower, best quality
 
 Recommendation: Start with Balanced""",
-
     "hwaccel": """Hardware Decode Acceleration
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Uses GPU to decode input video.
@@ -200,7 +192,6 @@ Options:
 
 Note: This is for DECODING input.
 GPU ENCODING is separate (see Video Codec)""",
-
     "video_resolution": """Output Resolution
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Video dimensions in pixels.
@@ -213,7 +204,6 @@ Common resolutions:
 
 Keep 'Original' to preserve quality
 Downscaling reduces file size""",
-
     "video_fps": """Frame Rate (FPS)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Frames per second in output video.
@@ -226,7 +216,6 @@ Common rates:
 
 Usually keep 'Original'
 Higher FPS = larger file""",
-
     "video_bitrate": """Video Bitrate
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Data rate for video stream.

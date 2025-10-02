@@ -114,9 +114,9 @@ class AboutWindow(ctk.CTkToplevel):
         desc_text = ctk.CTkLabel(
             desc_frame,
             text="A powerful, flexible, and lightning-fast media converter\n"
-                 "supporting hundreds of audio and video formats.\n\n"
-                 "Features hardware acceleration, batch processing,\n"
-                 "and advanced customization options.",
+            "supporting hundreds of audio and video formats.\n\n"
+            "Features hardware acceleration, batch processing,\n"
+            "and advanced customization options.",
             font=ctk.CTkFont(size=12),
             text_color=COLORS["text_secondary"],
             justify="center",
@@ -237,10 +237,10 @@ class AboutWindow(ctk.CTkToplevel):
         license_text = ctk.CTkLabel(
             license_frame,
             text="MIT License\n\n"
-                 "Copyright (c) 2024 Politrees\n\n"
-                 "Permission is hereby granted, free of charge, to any person\n"
-                 "obtaining a copy of this software to use, modify, and distribute\n"
-                 "it freely under the terms of the MIT License.",
+            "Copyright (c) 2024 Politrees\n\n"
+            "Permission is hereby granted, free of charge, to any person\n"
+            "obtaining a copy of this software to use, modify, and distribute\n"
+            "it freely under the terms of the MIT License.",
             font=ctk.CTkFont(size=10),
             text_color=COLORS["text_secondary"],
             justify="center",
@@ -261,10 +261,10 @@ class AboutWindow(ctk.CTkToplevel):
         credits_text = ctk.CTkLabel(
             credits_frame,
             text="Developed with ❤️ by the Politrees\n\n"
-                 "Special thanks to:\n"
-                 "• FFmpeg developers for the incredible framework\n"
-                 "• CustomTkinter team for the beautiful UI library\n"
-                 "• All contributors and users",
+            "Special thanks to:\n"
+            "• FFmpeg developers for the incredible framework\n"
+            "• CustomTkinter team for the beautiful UI library\n"
+            "• All contributors and users",
             font=ctk.CTkFont(size=11),
             text_color=COLORS["text_secondary"],
             justify="center",

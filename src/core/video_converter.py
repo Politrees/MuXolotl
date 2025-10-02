@@ -86,13 +86,13 @@ class VideoConverter:
 
         # H.264 encoders (priority order: best performance first)
         h264_priority = [
-            "h264_nvenc",          # NVIDIA (fastest, excellent quality)
-            "h264_qsv",            # Intel Quick Sync (very fast)
-            "h264_amf",            # AMD (fast)
-            "h264_videotoolbox",   # macOS (fast)
-            "h264_vaapi",          # Linux VAAPI
-            "h264_v4l2m2m",        # Raspberry Pi
-            "libx264",             # CPU fallback (slower but universal)
+            "h264_nvenc",  # NVIDIA (fastest, excellent quality)
+            "h264_qsv",  # Intel Quick Sync (very fast)
+            "h264_amf",  # AMD (fast)
+            "h264_videotoolbox",  # macOS (fast)
+            "h264_vaapi",  # Linux VAAPI
+            "h264_v4l2m2m",  # Raspberry Pi
+            "libx264",  # CPU fallback (slower but universal)
         ]
 
         for encoder in h264_priority:
@@ -308,7 +308,7 @@ class VideoConverter:
             logger.error(f"Conversion failed for: {input_file}")
             return None
 
-        except (OSError, IOError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.error(f"Video conversion error: {e}", exc_info=True)
             return None
 
@@ -381,7 +381,7 @@ class VideoConverter:
             logger.error(f"Audio extraction failed for: {input_file}")
             return None
 
-        except (OSError, IOError, ImportError) as e:
+        except (OSError, ImportError) as e:
             logger.error(f"Audio extraction error: {e}", exc_info=True)
             return None
 
@@ -457,10 +457,7 @@ class VideoConverter:
     def get_supported_formats(self) -> list:
         """Get list of supported video formats"""
         available = self.detector.get_video_formats()
-        return sorted([
-            fmt for fmt in self.FORMAT_MAPPING
-            if self.FORMAT_MAPPING[fmt] in available or fmt in available
-        ])
+        return sorted([fmt for fmt in self.FORMAT_MAPPING if self.FORMAT_MAPPING[fmt] in available or fmt in available])
 
     def get_file_info(self, file_path: str) -> dict[str, any]:
         """Get video file information"""
