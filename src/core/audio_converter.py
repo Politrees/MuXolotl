@@ -13,7 +13,7 @@ logger = get_logger()
 
 
 class AudioConverter:
-    """Handle audio file conversions"""
+    """Handle audio file conversions with complete format support"""
 
     # Format to FFmpeg format mapping (COMPLETE)
     FORMAT_MAPPING = {
@@ -71,7 +71,7 @@ class AudioConverter:
         "aiff": ["pcm_s16be", "pcm_s24be", "pcm_s32be"],
         "aif": ["pcm_s16be", "pcm_s24be"],
         "aifc": ["pcm_s16be", "pcm_s24be"],
-        "caf": ["aac", "pcm_s16le", "alac"],
+        "caf": ["pcm_s16le", "pcm_s24le", "alac", "aac"],  # CAF prefers PCM
         "au": ["pcm_s16be", "pcm_mulaw", "pcm_alaw"],
         "amr": ["libopencore_amrnb", "amr_nb"],
         "awb": ["libopencore_amrwb", "amr_wb"],
@@ -93,6 +93,19 @@ class AudioConverter:
         "vorbis",  # Native vorbis (not libvorbis)
         "opus",    # Native opus (not libopus)
         "aac",     # Native aac in some builds
+        "dca",  # DTS encoder
+    }
+
+    # Formats with strict sample rate requirements
+    SAMPLE_RATE_REQUIREMENTS = {
+        "amr": 8000,   # AMR-NB requires 8000 Hz
+        "awb": 16000,  # AMR-WB requires 16000 Hz
+    }
+
+    # Formats with strict channel requirements
+    CHANNEL_REQUIREMENTS = {
+        "amr": 1,  # AMR requires mono
+        "awb": 1,  # AWB requires mono
     }
 
     # Read-only formats (can decode but usually can't encode)
@@ -120,12 +133,6 @@ class AudioConverter:
             "libmp3lame": "MP3",
             "aac": "AAC/M4A",
             "flac": "FLAC",
-        }
-
-        important_encoders = {
-            "libvorbis": "OGG Vorbis",
-            "vorbis": "OGG Vorbis (native)",
-            "libopus": "Opus",
         }
 
         for encoder, format_name in critical_encoders.items():
@@ -203,6 +210,22 @@ class AudioConverter:
                 logger.warning(f"Codec {codec} not available, using auto-selection")
                 codec = self._get_best_codec(output_format)
 
+            # Apply format-specific requirements
+            actual_sample_rate = sample_rate
+            actual_channels = channels
+
+            if output_format in self.SAMPLE_RATE_REQUIREMENTS:
+                required_sr = self.SAMPLE_RATE_REQUIREMENTS[output_format]
+                if codec != "copy":
+                    actual_sample_rate = required_sr
+                    logger.info(f"Auto-setting sample rate to {required_sr} Hz for {output_format} format")
+
+            if output_format in self.CHANNEL_REQUIREMENTS:
+                required_ch = self.CHANNEL_REQUIREMENTS[output_format]
+                if codec != "copy":
+                    actual_channels = required_ch
+                    logger.info(f"Auto-setting channels to {required_ch} for {output_format} format")
+
             # Use fallback conversion
             return self._convert_with_fallback(
                 input_file=input_file,
@@ -210,8 +233,8 @@ class AudioConverter:
                 output_format=output_format,
                 codec=codec,
                 bitrate=bitrate,
-                sample_rate=sample_rate,
-                channels=channels,
+                sample_rate=actual_sample_rate,
+                channels=actual_channels,
                 quality=quality,
                 preserve_metadata=preserve_metadata,
                 progress_callback=progress_callback,

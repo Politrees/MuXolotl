@@ -106,6 +106,12 @@ class VideoConverter:
         "opus",
         "aac",  # In some FFmpeg builds
         "theora",
+        "dca",  # DTS encoder
+    }
+
+    # Problematic formats (known to have bugs)
+    PROBLEMATIC_FORMATS = {
+        "ogv": "libtheora encoder may crash after ~40 seconds on some systems (FFmpeg bug)",
     }
 
     def __init__(self):
@@ -137,7 +143,7 @@ class VideoConverter:
         logger.debug(f"Found {len(self.all_audio_available)} audio encoders")
 
     def _detect_hardware_encoders(self) -> dict[str, str | None]:
-        """Detect available hardware encoders using GPU detection
+        """Detect available hardware encoders using GPU detection with smart filtering
 
         Returns:
             Dictionary mapping codec types to best available encoder
@@ -153,8 +159,39 @@ class VideoConverter:
         # Get recommended encoders based on detected GPU
         recommended = self.gpu_detector.get_recommended_encoders()
 
-        # Test H.264 encoders in priority order
-        for encoder in recommended["h264"]:
+        # IMPORTANT: Remove encoders from wrong vendors
+        def filter_encoders_by_gpu(encoder_list):
+            """Filter out encoders from non-existent hardware"""
+            filtered = []
+            for enc in encoder_list:
+                # Skip NVIDIA encoders if no NVIDIA GPU
+                if "nvenc" in enc and not self.gpu_detector.gpu_info["nvidia"]:
+                    logger.debug(f"Skipping {enc} - no NVIDIA GPU detected")
+                    continue
+
+                # Skip AMD encoders if no AMD GPU
+                if "amf" in enc and not self.gpu_detector.gpu_info["amd"]:
+                    logger.debug(f"Skipping {enc} - no AMD GPU detected")
+                    continue
+
+                # Skip Intel encoders if no Intel GPU
+                if "qsv" in enc and not self.gpu_detector.gpu_info["intel"]:
+                    logger.debug(f"Skipping {enc} - no Intel GPU detected")
+                    continue
+
+                # Skip Apple encoders if not Apple
+                if "videotoolbox" in enc and not self.gpu_detector.gpu_info["apple"]:
+                    logger.debug(f"Skipping {enc} - no Apple Silicon detected")
+                    continue
+
+                filtered.append(enc)
+
+            return filtered
+
+        # Test H.264 encoders (filtered by GPU)
+        h264_filtered = filter_encoders_by_gpu(recommended["h264"])
+
+        for encoder in h264_filtered:
             if encoder in self.all_video_available:
                 if self.detector.test_encoder(encoder, self.gpu_detector):
                     encoders["h264"] = encoder
@@ -166,8 +203,10 @@ class VideoConverter:
                 else:
                     logger.debug(f"Encoder {encoder} available but failed test")
 
-        # Test HEVC encoders
-        for encoder in recommended["hevc"]:
+        # Test HEVC encoders (filtered by GPU)
+        hevc_filtered = filter_encoders_by_gpu(recommended["hevc"])
+
+        for encoder in hevc_filtered:
             if encoder in self.all_video_available:
                 if self.detector.test_encoder(encoder, self.gpu_detector):
                     encoders["hevc"] = encoder
@@ -175,15 +214,19 @@ class VideoConverter:
                         logger.info(f"✅ Hardware HEVC encoder: {encoder}")
                     break
 
-        # Test VP9 encoders
-        for encoder in recommended["vp9"]:
+        # Test VP9 encoders (filtered by GPU)
+        vp9_filtered = filter_encoders_by_gpu(recommended["vp9"])
+
+        for encoder in vp9_filtered:
             if encoder in self.all_video_available:
                 if self.detector.test_encoder(encoder, self.gpu_detector):
                     encoders["vp9"] = encoder
                     break
 
-        # Test AV1 encoders
-        for encoder in recommended["av1"]:
+        # Test AV1 encoders (filtered by GPU)
+        av1_filtered = filter_encoders_by_gpu(recommended["av1"])
+
+        for encoder in av1_filtered:
             if encoder in self.all_video_available:
                 if self.detector.test_encoder(encoder, self.gpu_detector):
                     encoders["av1"] = encoder
@@ -262,6 +305,10 @@ class VideoConverter:
                 logger.error(f"Input file not found: {input_file}")
                 return None
 
+            # Check for problematic formats
+            if output_format in self.PROBLEMATIC_FORMATS:
+                logger.warning(f"⚠️ Format {output_format} may be unstable: {self.PROBLEMATIC_FORMATS[output_format]}")
+
             # Create output directory
             os.makedirs(output_dir, exist_ok=True)
 
@@ -329,8 +376,26 @@ class VideoConverter:
         compatible_video = self.FORMAT_VIDEO_CODEC_COMPATIBILITY.get(output_format, [video_codec])
         compatible_audio = self.FORMAT_AUDIO_CODEC_COMPATIBILITY.get(output_format, [audio_codec])
 
-        # Build list of video codecs to try
+        # Filter out encoders from non-existent hardware
+        def filter_by_gpu(codec_list):
+            """Remove encoders for GPUs we don't have"""
+            filtered = []
+            for codec in codec_list:
+                if "nvenc" in codec and not self.gpu_detector.gpu_info["nvidia"]:
+                    continue
+                if "amf" in codec and not self.gpu_detector.gpu_info["amd"]:
+                    continue
+                if "qsv" in codec and not self.gpu_detector.gpu_info["intel"]:
+                    continue
+                if "videotoolbox" in codec and not self.gpu_detector.gpu_info["apple"]:
+                    continue
+                filtered.append(codec)
+            return filtered
+
+        # Build list of video codecs to try (filtered)
+        compatible_video = filter_by_gpu(compatible_video)
         video_codecs_to_try = []
+        
         if video_codec in compatible_video:
             video_codecs_to_try.append(video_codec)
 
@@ -420,6 +485,11 @@ class VideoConverter:
                 if current_audio_codec in self.EXPERIMENTAL_CODECS:
                     custom_params.extend(["-strict", "-2"])
                     logger.debug(f"Added -strict -2 for experimental audio codec {current_audio_codec}")
+
+                if current_video_codec in self.EXPERIMENTAL_CODECS:
+                    if "-strict" not in custom_params:  # Avoid duplicates
+                        custom_params.extend(["-strict", "-2"])
+                    logger.debug(f"Added -strict -2 for experimental video codec {current_video_codec}")
 
                 if custom_params:
                     params["custom_params"] = custom_params
@@ -552,15 +622,30 @@ class VideoConverter:
             logger.warning(f"No codec mapping for format {fmt}, using libx264")
             return "libx264"
 
-        # Find first available compatible codec
+        # Filter by GPU
+        compatible_filtered = []
         for codec in compatible:
+            if "nvenc" in codec and not self.gpu_detector.gpu_info["nvidia"]:
+                continue
+            if "amf" in codec and not self.gpu_detector.gpu_info["amd"]:
+                continue
+            if "qsv" in codec and not self.gpu_detector.gpu_info["intel"]:
+                continue
+            compatible_filtered.append(codec)
+
+        # Find first available compatible codec
+        for codec in compatible_filtered:
             if codec in self.all_video_available:
                 logger.debug(f"Selected video codec {codec} for format {fmt}")
                 return codec
 
         # If no available codec, return first compatible
-        logger.warning(f"No available video encoder for {fmt}, will try {compatible[0]}")
-        return compatible[0]
+        if compatible_filtered:
+            logger.warning(f"No available video encoder for {fmt}, will try {compatible_filtered[0]}")
+            return compatible_filtered[0]
+
+        logger.warning(f"No compatible video codec for {fmt}, using libx264")
+        return "libx264"
 
     def _get_best_audio_codec(self, fmt: str) -> str:
         """Get best available audio codec for format"""
