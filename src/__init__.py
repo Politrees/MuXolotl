@@ -1,5 +1,4 @@
-"""
-MuXolotl - Universal Media Converter
+"""MuXolotl - Universal Media Converter
 """
 
 __version__ = "0.0.1"

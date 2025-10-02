@@ -1,21 +1,20 @@
-"""
-GUI modules for MuXolotl - Modern redesign
+"""GUI modules for MuXolotl - Modern redesign
 """
 
-from .main_window import MuXolotlApp
-from .audio_tab import AudioTab
-from .video_tab import VideoTab
-from .settings_window import SettingsWindow
 from .about_window import AboutWindow
-from .tooltip import ToolTip, create_tooltip, TOOLTIPS
+from .audio_tab import AudioTab
+from .main_window import MuXolotlApp
+from .settings_window import SettingsWindow
+from .tooltip import TOOLTIPS, ToolTip, create_tooltip
+from .video_tab import VideoTab
 
 __all__ = [
-    'MuXolotlApp', 
-    'AudioTab', 
-    'VideoTab', 
-    'SettingsWindow', 
-    'AboutWindow',
-    'ToolTip', 
-    'create_tooltip', 
-    'TOOLTIPS'
+    "TOOLTIPS",
+    "AboutWindow",
+    "AudioTab",
+    "MuXolotlApp",
+    "SettingsWindow",
+    "ToolTip",
+    "VideoTab",
+    "create_tooltip",
 ]
