@@ -1,0 +1,26 @@
+{
+  "theme": "dark",
+  "last_output_dir": "C:\\Users\\Politrees\\Downloads",
+  "audio": {
+    "default_format": "mp3",
+    "default_codec": "auto",
+    "default_bitrate": "192k",
+    "default_sample_rate": "44100",
+    "default_channels": "2"
+  },
+  "video": {
+    "default_format": "mp4",
+    "default_video_codec": "libx264",
+    "default_audio_codec": "aac",
+    "default_preset": "medium",
+    "default_crf": "23",
+    "default_video_bitrate": "auto",
+    "default_audio_bitrate": "192k"
+  },
+  "advanced": {
+    "hardware_acceleration": "auto",
+    "thread_count": "auto",
+    "overwrite_files": true,
+    "preserve_metadata": true
+  }
+}
