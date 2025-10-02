@@ -304,11 +304,3 @@ class FormatDetector:
         except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
             logger.debug(f"Encoder test failed for {encoder}: {e}")
             return False
-
-    def get_format_info(self, format_name: str) -> dict[str, any]:
-        """Get detailed information about a format"""
-        return {
-            "name": format_name,
-            "is_audio": format_name in self.get_audio_formats(),
-            "is_video": format_name in self.get_video_formats(),
-        }
