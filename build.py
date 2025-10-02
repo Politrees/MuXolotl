@@ -123,7 +123,7 @@ def build_executable():
         [
             "--add-data=src:src",
             "--add-data=assets:assets",  # Add this line to include assets folder
-        ]
+        ],
     )
 
     # Hidden imports
